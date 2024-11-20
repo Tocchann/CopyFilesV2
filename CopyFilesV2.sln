@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CopyFiles.Core", "CopyFiles.Core\CopyFiles.Core.csproj", "{CF8E1934-5F18-4C2A-9388-386EC052876E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目", "ソリューション項目", "{CA805AD5-0AD1-40D3-B88A-61EE4E943A9D}"
+	ProjectSection(SolutionItems) = preProject
+		CopyFilesV2.md = CopyFilesV2.md
+		IKIPInstaller64.ism = IKIPInstaller64.ism
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PeFileAccessor", "PeFileAccessor\PeFileAccessor.csproj", "{2CD66525-DA3B-4416-9E7E-2B783DBFD245}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CopyFiles", "CopyFiles\CopyFiles.csproj", "{C6F23E88-F12B-47B4-BDBB-4320AC3A2BB8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CopyFiles.Extensions.UI.Abstractions", "CopyFiles.Extensions.UI.Abstractions\CopyFiles.Extensions.UI.Abstractions.csproj", "{AB021975-8B6A-4B6B-BBA0-BA05A84892E6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CopyFiles.Extensions.UI.WPF", "CopyFiles.Extensions.UI.WPF\CopyFiles.Extensions.UI.WPF.csproj", "{7696517C-97EC-405A-90A2-61AA8F29673D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CopyFiles.Extensions.Storage", "CopyFiles.Extensions.Storage\CopyFiles.Extensions.Storage.csproj", "{BBDB6A31-6A75-4E1D-9AD0-B7DCF2F277BA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CF8E1934-5F18-4C2A-9388-386EC052876E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF8E1934-5F18-4C2A-9388-386EC052876E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF8E1934-5F18-4C2A-9388-386EC052876E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF8E1934-5F18-4C2A-9388-386EC052876E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CD66525-DA3B-4416-9E7E-2B783DBFD245}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CD66525-DA3B-4416-9E7E-2B783DBFD245}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CD66525-DA3B-4416-9E7E-2B783DBFD245}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CD66525-DA3B-4416-9E7E-2B783DBFD245}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6F23E88-F12B-47B4-BDBB-4320AC3A2BB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6F23E88-F12B-47B4-BDBB-4320AC3A2BB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6F23E88-F12B-47B4-BDBB-4320AC3A2BB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6F23E88-F12B-47B4-BDBB-4320AC3A2BB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB021975-8B6A-4B6B-BBA0-BA05A84892E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB021975-8B6A-4B6B-BBA0-BA05A84892E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB021975-8B6A-4B6B-BBA0-BA05A84892E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB021975-8B6A-4B6B-BBA0-BA05A84892E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7696517C-97EC-405A-90A2-61AA8F29673D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7696517C-97EC-405A-90A2-61AA8F29673D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7696517C-97EC-405A-90A2-61AA8F29673D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7696517C-97EC-405A-90A2-61AA8F29673D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBDB6A31-6A75-4E1D-9AD0-B7DCF2F277BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBDB6A31-6A75-4E1D-9AD0-B7DCF2F277BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBDB6A31-6A75-4E1D-9AD0-B7DCF2F277BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBDB6A31-6A75-4E1D-9AD0-B7DCF2F277BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2EDFE1CF-BAB7-453B-82B2-BC5DD28BA45A}
+	EndGlobalSection
+EndGlobal
