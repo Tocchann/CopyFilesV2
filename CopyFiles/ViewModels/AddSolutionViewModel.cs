@@ -25,7 +25,7 @@ public partial class AddSolutionViewModel( IDispAlert m_dispAlert ) : Observable
 			m_dispAlert.Show( "ソリューション名を入力してください", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
 			return;
 		}
-		if( App.ProjectSettingManager.ProjectSettings.ContainsKey( SolutionName ) )
+		if( App.ProjectSettingManager.ProjectSettings.Any( setting => setting.Name == SolutionName ) )
 		{
 			m_dispAlert.Show( "ソリューション名が重複しています", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
 			return;

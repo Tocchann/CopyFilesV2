@@ -17,14 +17,18 @@ public class FileInformation
 		// 相対パスを設定する場合は、ファイル情報を取得する
 		if( isAbsolute )
 		{
-			var info = new FileInfo( filePath );
-			Exists = info.Exists;
-			FileVersion = GetFileVersion( filePath );
-			if( Exists )
-			{
-				LastWriteTime = info.LastWriteTimeUtc;
-				FileSize = info.Length;
-			}
+			UpdateFileInfo();
+		}
+	}
+	public void UpdateFileInfo()
+	{
+		var info = new FileInfo( FilePath );
+		Exists = info.Exists;
+		FileVersion = GetFileVersion( FilePath );
+		if( Exists )
+		{
+			LastWriteTime = info.LastWriteTimeUtc;
+			FileSize = info.Length;
 		}
 	}
 	private static Version? GetFileVersion( string filePath )
@@ -57,14 +61,18 @@ public class TargetFileInformation
 	public bool NeedCopy =>	CompareStatus switch
 							{
 								// 通常コピー
-								CompareStatus.NewFile => true,
-								CompareStatus.UnMatch => true,
-								CompareStatus.UnMatchSameVersion => true,
-								CompareStatus.MatchWithoutDate => true,
-								CompareStatus.MatchWithoutSignature => true,
+								CompareStatus.NewFile or
+								CompareStatus.UnMatch or
+								CompareStatus.UnMatchSameVersion or
 								// 署名用コピー
 								CompareStatus.NotExistSignature => true,
-								_ => false,
+								// そのほかは処理不要
+								CompareStatus.Unknown or
+								CompareStatus.Match or
+								CompareStatus.MatchWithoutSignature or
+								CompareStatus.MatchWithoutDate or
+								CompareStatus.ExistSignature => false,
+								_ => throw new NotImplementedException(),
 							};
 	public TargetFileInformation( FileInformation baseInfo, FileInformation referInfo )
 	{

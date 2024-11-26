@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CopyFiles.Core.Models;
 using CopyFiles.Extensions.UI.Abstractions;
+using System.ComponentModel;
 using System.IO;
 
 namespace CopyFiles.ViewModels;
@@ -9,10 +10,10 @@ namespace CopyFiles.ViewModels;
 public partial class ReferFolderItem : ObservableObject
 {
 	[ObservableProperty]
-	string baseFolder = string.Empty;
+	string baseFolder;
 
 	[ObservableProperty]
-	string referenceFolder = string.Empty;
+	string referenceFolder;
 
 	public ReferFolder ReferFolder
 	{
@@ -31,6 +32,8 @@ public partial class ReferFolderItem : ObservableObject
 	}
 	public ReferFolderItem()
 	{
+		BaseFolder = string.Empty;
+		ReferenceFolder = string.Empty;
 	}
 }
 
@@ -49,7 +52,6 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 		var dlg = App.GetService<ISelectFolderDialog>();
 		dlg.Title = "基準フォルダの選択";
 		dlg.SelectedPath = BaseFolder;
-		dlg.ShowDialog();
 		if( dlg.ShowDialog() == true )
 		{
 			BaseFolder = dlg.SelectedPath;
@@ -61,7 +63,6 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 		var dlg = App.GetService<ISelectFolderDialog>();
 		dlg.Title = "参照フォルダの選択";
 		dlg.SelectedPath = ReferenceFolder;
-		dlg.ShowDialog();
 		if( dlg.ShowDialog() == true )
 		{
 			ReferenceFolder = dlg.SelectedPath;
@@ -107,6 +108,13 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 				return;
 			}
 		}
+		DialogResult = true;
+	}
+	[DesignOnly(true)]
+#pragma warning disable CS8618 // null 非許容のフィールドには、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、Null 許容として宣言することを検討してください。
+	public EditReferFolderViewModel()
+#pragma warning restore CS8618 // null 非許容のフィールドには、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、Null 許容として宣言することを検討してください。
+	{
 	}
 	public EditReferFolderViewModel( IDispAlert dispAlert ) : base()
 	{

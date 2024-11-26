@@ -9,8 +9,8 @@ public enum CompareStatus
 	/// <summary>
 	/// NoAction - コピーなどの操作は不要
 	/// </summary>
-	NoAction,
-	Match=NoAction,
+	Match,
+	NoAction=Match,
 	/// <summary>
 	/// MatchWithoutSignature - 署名の有無が違うが内容は一致
 	/// </summary>

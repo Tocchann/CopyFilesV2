@@ -2,15 +2,20 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CopyFiles.Contract.Views;
+using CopyFiles.Core.DataflowBlock;
 using CopyFiles.Core.Models;
+using CopyFiles.Core.Tasks;
 using CopyFiles.Extensions.UI.Abstractions;
 using CopyFiles.Extensions.UI.WPF;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks.Dataflow;
 
 namespace CopyFiles.ViewModels;
 
@@ -18,15 +23,12 @@ public partial class CollectTargetFilesViewModel : ObservableObject
 {
 	public ObservableCollection<string> ProjectFiles { get; init; }
 	[ObservableProperty]
+	[NotifyPropertyChangedFor( nameof( IsSelectedProjectFile ) )]
 	string? selectedProjectFile;
-
-	partial void OnSelectedProjectFileChanged( string? value )
-	{
-		OnPropertyChanged( nameof( IsSelectedProjectFile ) );
-	}
 
 	public ObservableCollection<ReferFolderItem> ReferFolders { get; init; }
 	[ObservableProperty]
+	[NotifyPropertyChangedFor( nameof( IsSelectedReferFolder ) )]
 	ReferFolderItem? selectedReferFolder;
 
 	public ObservableCollection<TargetFileInformationItem> TargetFiles { get; init; }
@@ -104,6 +106,15 @@ public partial class CollectTargetFilesViewModel : ObservableObject
 	}
 	public bool IsSelectedReferFolder => SelectedReferFolder != null;
 
+	[ObservableProperty]
+	bool isCheckedNeedCopy;
+
+	partial void OnIsCheckedNeedCopyChanged( bool value )
+	{
+		App.ProjectSettingManager.CurrentSetting.IsNeedCopy = value;
+		ListupTargetFiles();
+	}
+
 	// Progress関連処理
 	[ObservableProperty]
 	bool isProgressBarVisible;
@@ -138,18 +149,137 @@ public partial class CollectTargetFilesViewModel : ObservableObject
 		}
 	}
 	[RelayCommand]
-	void CheckTargetFiles()
+	async Task CancelWorkAsync()
 	{
-		// インジケータを動かしつつタスクを回す
+		if( m_cts != null )
+		{
+			await m_cts.CancelAsync();
+		}
 	}
 	[RelayCommand]
-	void CopyTargetFiles()
+	async Task CheckTargetFilesAsync()
 	{
-		// インジケータを動かしつつファイルをコピーする
+		Progress<int> progressCount = new();
+		progressCount.ProgressChanged += ( sender, e ) =>
+		{
+			ProgressValue = e;
+		};
+		// プロジェクトを読み込む
+		try
+		{
+			m_cts = new();
+			IsIndeterminate = true;
+			IsProgressBarVisible = true;
+			ProgressMessage = "プロジェクトファイルの読み込み中...";
+			var files = await ListFilesTask.ListSourceFilesAsync( App.ProjectSettingManager.CurrentSetting, true, m_cts.Token );
+			ProgressMessage = "コピー対象ファイルの確認中...";
+			ProgressMin = 0;
+			ProgressMax = files.Count();
+			ProgressValue = 0;
+			IsIndeterminate = false;
+			TargetFilesList = await ListFilesTask.ListCopyFilesAsync( App.ProjectSettingManager.CurrentSetting, files, progressCount, m_cts.Token );
+			ListupTargetFiles();
+		}
+		catch( OperationCanceledException )
+		{
+			TargetFiles.Clear();
+		}
+		finally
+		{
+			IsIndeterminate = false;
+			IsProgressBarVisible = false;
+			m_cts?.Dispose();
+			m_cts = null;
+		}
+	}
+	private void ListupTargetFiles()
+	{
+		// ここは一瞬で組み立てできるので、UIスレッドで処理する
+		TargetFiles.Clear();
+		if( TargetFilesList != null )
+		{
+			var targetInfos = TargetFilesList;
+			if( IsCheckedNeedCopy )
+			{
+				targetInfos = targetInfos.Where( info => info.NeedCopy );
+			}
+			// 順番は比較条件->ファイルパスの順に比較(それ以降は特に比較しなくてもいいでしょう)
+			foreach( var info in targetInfos.OrderBy( i => i.ReferFileInfo.FilePath ).ThenBy( i => i.CompareStatus ) )
+			{
+				TargetFiles.Add( new TargetFileInformationItem( App.ProjectSettingManager.CurrentSetting.CopySettings, info, OnIsCheckedChanged ) );
+			}
+		}
+		IsReadyCopy = TargetFiles.Any( info => info.IsCopy );
+	}
+	[RelayCommand]
+	async Task CopyTargetFilesAsync()
+	{
+		Progress<int> progressCount = new();
+		progressCount.ProgressChanged += ( sender, e ) =>
+		{
+			ProgressValue += e;
+		};
+		try
+		{
+			m_cts = new();
+			IsIndeterminate = false;
+			ProgressMessage = "コピー中...";
+			ProgressMin = 0;
+			ProgressMax = TargetFiles.Count( item => item.IsCopy );
+			IsProgressBarVisible = true;
+			ProgressValue = 0;
+			IsIndeterminate = false;
+			// コピー処理をここで行えばよい…でしょう
+			var token = m_cts.Token;
+			var blockOptions = new ExecutionDataflowBlockOptions
+			{
+				CancellationToken = token,
+				EnsureOrdered = false,
+				MaxDegreeOfParallelism = -1,
+			};
+			var copyActionBlock = new ActionBlock<TargetFileInformationItem>( item => CopyAction( item, progressCount, token ), blockOptions );
+			foreach( var item in TargetFiles.Where( i => i.IsCopy ) )
+			{
+				await copyActionBlock.SendAsync( item, m_cts.Token );
+			}
+			copyActionBlock.Complete();
+			await copyActionBlock.Completion;
+		}
+		catch( OperationCanceledException )
+		{
+			//TargetFiles.Clear();
+		}
+		finally
+		{
+			IsProgressBarVisible = false;
+			m_cts?.Dispose();
+			m_cts = null;
+		}
 	}
 	[ObservableProperty]
 	bool isReadyCopy;
 
+	private void CopyAction( TargetFileInformationItem item, IProgress<int> progress, CancellationToken token )
+	{
+		// ここでコピー処理を行う
+		token.ThrowIfCancellationRequested();
+
+		// 条件によらず呼び出されていればカウンタを上げておかないとおかしくなる
+		if( item.IsCopy )
+		{
+			var dstDir = Path.GetDirectoryName( item.TargetFileInformation.BaseFileInfo.FilePath );
+			Debug.Assert( dstDir != null ); // フルパスでセットされているのでnullになることはない
+			Directory.CreateDirectory( dstDir );
+			File.Copy( item.TargetFileInformation.ReferFileInfo.FilePath, item.TargetFileInformation.BaseFileInfo.FilePath, true );
+		}
+		// 比較しなおしだけする
+		token.ThrowIfCancellationRequested();
+		item.TargetFileInformation.BaseFileInfo.UpdateFileInfo();
+		CompareFileInfo.CompareCopy( item.TargetFileInformation, token );
+		item.UpdateStatus( true, true );
+		// 進捗を進める
+		progress.Report( 1 );
+	}
 
 	public CollectTargetFilesViewModel( ILogger<CollectTargetFilesViewModel> logger, IDispAlert dispAlert )
 	{
@@ -158,6 +288,7 @@ public partial class CollectTargetFilesViewModel : ObservableObject
 		ProjectFiles = [.. App.ProjectSettingManager.CurrentSetting.ProjectFiles];
 		ReferFolders = [.. App.ProjectSettingManager.CurrentSetting.CopySettings.Select( x => new ReferFolderItem( x ) )];
 		TargetFiles = new();
+		IsCheckedNeedCopy = App.ProjectSettingManager.CurrentSetting.IsNeedCopy;
 	}
 	[DesignOnly(true)]
 #pragma warning disable CS8618 // null 非許容のフィールドには、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、Null 許容として宣言することを検討してください。
@@ -167,6 +298,14 @@ public partial class CollectTargetFilesViewModel : ObservableObject
 		//Debug.Assert( false );	//	実行されないはず
 	}
 
+	private void OnIsCheckedChanged()
+	{
+		// コピー対象になっているものが一つ以上あったらコピーを許可する
+		IsReadyCopy = TargetFiles.Any( info => info.IsCopy );
+	}
+
 	private ILogger<CollectTargetFilesViewModel> m_logger;
 	private IDispAlert m_dispAlert;
+	private CancellationTokenSource? m_cts;
+	private IEnumerable<TargetFileInformation>? TargetFilesList { get; set; }
 }

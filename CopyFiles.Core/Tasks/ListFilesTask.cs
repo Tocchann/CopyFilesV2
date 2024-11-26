@@ -18,7 +18,7 @@ public static class ListFilesTask
 	/// <param name="progress"></param>
 	/// <param name="token"></param>
 	/// <returns></returns>
-	public static async Task<IEnumerable<string>> ListSourceFilesAsync( ProjectSetting setting, IProgress<string> progress, CancellationToken token )
+	public static async Task<IEnumerable<string>> ListSourceFilesAsync( ProjectSetting setting, bool copyMode, CancellationToken token )
 	{
 		// プロジェクトが異なると同じファイルを参照することがあるので一意になっている必要がある
 		var baseFiles = new HashSet<string>();
@@ -47,12 +47,29 @@ public static class ListFilesTask
 			projectFilePath => ProjectFileReader.Read( projectFilePath, token ), blockOptions );
 
 		// 同じファイルが複数含まれないように列挙しないとダメ
-		var addBaseFilesBlock = new ActionBlock<string>( file => baseFiles.Add( file ), singleBlockOptions );
+		var addBaseFilesBlock =
+			copyMode ?
+				new ActionBlock<string>( file =>
+				{
+					// 収集パスが対象としているものだけターゲットにする
+					if( setting.CopySettings.Any( setting => file.StartsWith( setting.BaseFolder ) ) )
+					{
+						baseFiles.Add( file );
+					}
+				}, singleBlockOptions ) :
+				new ActionBlock<string>( file =>
+				{
+					// 署名用にピックアップしているものは一か所に集約しているのでそれだけチェック
+					if( file.StartsWith( setting.SignerFileSetting.BaseFolder ) )
+					{
+						baseFiles.Add( file );
+					}
+				}, singleBlockOptions );
+
 		readFilesBlock.LinkTo( addBaseFilesBlock, linkOptions );
 
 		foreach( var projectFile in setting.ProjectFiles )
 		{
-			progress.Report( projectFile );
 			await readFilesBlock.SendAsync( projectFile, token );
 		}
 		readFilesBlock.Complete();

@@ -35,14 +35,15 @@ public partial class SelectWorkViewModel : ObservableObject
 		{
 			var setting = new ProjectSetting
 			{
+				Name = dlg.ViewModel.SolutionName,
 				ProjectFiles = new(),
 				CopySettings = new(),
 				SignerFileSetting = new ReferFolder { BaseFolder = string.Empty, ReferenceFolder = string.Empty },
 				ZipFileNamePrefix = string.Empty,
 			};
-			App.ProjectSettingManager.ProjectSettings.Add( dlg.ViewModel.SolutionName, setting );
+			App.ProjectSettingManager.ProjectSettings.Add( setting );
 			ProjectSettingNames.Clear();
-			foreach( var key in App.ProjectSettingManager.ProjectSettings.Keys )
+			foreach( var key in App.ProjectSettingManager.ProjectSettings.Select( setting => setting.Name ) )
 			{
 				ProjectSettingNames.Add( key );
 			}
@@ -63,7 +64,7 @@ public partial class SelectWorkViewModel : ObservableObject
 		{
 			var name = SelectProjectSettingName;
 			ProjectSettingNames.Remove( name );
-			App.ProjectSettingManager.ProjectSettings.Remove( name );
+			App.ProjectSettingManager.ProjectSettings = App.ProjectSettingManager.ProjectSettings.Where( setting => setting.Name != name ).ToList();
 			SelectProjectSettingName = ProjectSettingNames.FirstOrDefault();
 			App.ProjectSettingManager.ProjectName = SelectProjectSettingName;
 		}
@@ -93,7 +94,7 @@ public partial class SelectWorkViewModel : ObservableObject
 		m_logger = logger;
 		m_dispAlert = dispAlert;
 
-		foreach( var key in App.ProjectSettingManager.ProjectSettings.Keys )
+		foreach( var key in App.ProjectSettingManager.ProjectSettings.Select( setting => setting.Name ) )
 		{
 			ProjectSettingNames.Add( key );
 		}
