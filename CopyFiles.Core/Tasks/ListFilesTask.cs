@@ -18,8 +18,14 @@ public static class ListFilesTask
 	/// <param name="progress"></param>
 	/// <param name="token"></param>
 	/// <returns></returns>
-	public static async Task<List<string>> ListSourceFilesAsync( ProjectSetting setting, IProgress<string> progress, CancellationToken token )
+	public static async Task<IEnumerable<string>> ListSourceFilesAsync( ProjectSetting setting, IProgress<string> progress, CancellationToken token )
 	{
+		// プロジェクトが異なると同じファイルを参照することがあるので一意になっている必要がある
+		var baseFiles = new HashSet<string>();
+		if( setting.ProjectFiles == null )
+		{
+			return baseFiles;
+		}
 		var blockOptions = new ExecutionDataflowBlockOptions
 		{
 			CancellationToken = token,
@@ -39,15 +45,14 @@ public static class ListFilesTask
 		// 実際にチェックするファイル数をカウントする(先に処理する。プログレス的には IsIndeterminate = true の状態)
 		var readFilesBlock = new TransformManyBlock<string, string>(
 			projectFilePath => ProjectFileReader.Read( projectFilePath, token ), blockOptions );
-		var baseFiles = new List<string>();
-		var addBaseFilesBlock = new ActionBlock<string>( filePath =>
-		{
-			progress.Report( filePath );
-			baseFiles.Add( filePath );
-		}, singleBlockOptions );
+
+		// 同じファイルが複数含まれないように列挙しないとダメ
+		var addBaseFilesBlock = new ActionBlock<string>( file => baseFiles.Add( file ), singleBlockOptions );
 		readFilesBlock.LinkTo( addBaseFilesBlock, linkOptions );
+
 		foreach( var projectFile in setting.ProjectFiles )
 		{
+			progress.Report( projectFile );
 			await readFilesBlock.SendAsync( projectFile, token );
 		}
 		readFilesBlock.Complete();
@@ -63,8 +68,14 @@ public static class ListFilesTask
 	/// <param name="progress">インジケータオブジェクト</param>
 	/// <param name="token">キャンセルトークン</param>
 	/// <returns>列挙したファイル情報リスト</returns>
-	public static async Task<List<TargetFileInformation>> ListCopyFilesAsync( ProjectSetting setting, List<string> baseFiles, IProgress<int> progress, CancellationToken token )
+	public static async Task<IEnumerable<TargetFileInformation>> ListCopyFilesAsync( ProjectSetting setting, IEnumerable<string> baseFiles, IProgress<int> progress, CancellationToken token )
 	{
+		var targetFiles = new List<TargetFileInformation>();
+		if( setting.CopySettings == null )
+		{
+			return targetFiles;
+		}
+
 		var blockOptions = new ExecutionDataflowBlockOptions
 		{
 			CancellationToken = token,
@@ -75,13 +86,12 @@ public static class ListFilesTask
 		{
 			CancellationToken = token,
 			EnsureOrdered = false,
-			MaxDegreeOfParallelism = 1, //	直列で処理する
+			MaxDegreeOfParallelism = 1, //	直列で処理する(ロックするのは面倒だからね)
 		};
 		var linkOptions = new DataflowLinkOptions
 		{
 			PropagateCompletion = true,
 		};
-		var targetFiles = new List<TargetFileInformation>();
 		var generateFilesBlock = new TransformBlock<string, TargetFileInformation>(
 			filePath => GenerateFileInformation.Generate( setting.CopySettings, filePath, true ), blockOptions );
 
@@ -113,6 +123,11 @@ public static class ListFilesTask
 
 	public static async Task<List<TargetFileInformation>> ListNotSignedFilesAsync( ProjectSetting setting, List<string> baseFiles, IProgress<int> progress, CancellationToken token )
 	{
+		var targetFiles = new List<TargetFileInformation>();
+		if( setting.SignerFileSetting == null )
+		{
+			return targetFiles;
+		}
 		var blockOptions = new ExecutionDataflowBlockOptions
 		{
 			CancellationToken = token,
@@ -129,9 +144,8 @@ public static class ListFilesTask
 		{
 			PropagateCompletion = true,
 		};
-		var targetFiles = new List<TargetFileInformation>();
 		var generateFilesBlock = new TransformBlock<string, TargetFileInformation>(
-			filePath => GenerateFileInformation.Generate( setting.CopySettings, filePath, false ), blockOptions );
+			filePath => GenerateFileInformation.Generate( [setting.SignerFileSetting], filePath, false ), blockOptions );
 
 		var compareFilesBlock = new TransformBlock<TargetFileInformation, TargetFileInformation>(
 			targetInfo => CompareFileInfo.CheckSignature( targetInfo, token ), blockOptions );

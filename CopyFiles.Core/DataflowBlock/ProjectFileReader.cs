@@ -19,7 +19,6 @@ public class ProjectFileReader
 	}
 	private static IEnumerable<string> ReadIsmFile( string projectFilePath, CancellationToken token )
 	{
-		HashSet<string> targetFiles = new();
 		XmlDocument ism = new();
 		ism.Load( projectFilePath );
 		token.ThrowIfCancellationRequested();
@@ -57,15 +56,15 @@ public class ProjectFileReader
 										}
 									}
 								}
-								targetFiles.Add( sourcePath );
+								// ピックアップされるごとに出力することで、後続処理を順次おこなえるようにする(多分流れ込んでいくと思うんだよね…)
 								Trace.WriteLine( $"Add:{sourcePath}" );
+								yield return sourcePath;
 							}
 						}
 					}
 				}
 			}
 		}
-		return targetFiles;
 	}
 	/// <summary>
 	/// パス変換テーブル情報を読み取る(変換しやすいようにキーも調整しておく)

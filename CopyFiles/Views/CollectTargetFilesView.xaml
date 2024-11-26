@@ -1,0 +1,113 @@
+﻿<Window x:Class="CopyFiles.Views.CollectTargetFilesView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CopyFiles.Views"
+        xmlns:vm="clr-namespace:CopyFiles.ViewModels"
+        mc:Ignorable="d"
+        Title="インストール対象ファイルの収集"  SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner">
+  <d:Window.DataContext>
+    <vm:CollectTargetFilesViewModel />
+  </d:Window.DataContext>
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="4" />
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="4" />
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="4" />
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="12" />
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="4" />
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="auto" />
+    </Grid.RowDefinitions>
+    <ListView Grid.Row="0" d:ItemsSource="{d:SampleData ItemCount=2}" ItemsSource="{Binding ProjectFiles}" SelectedItem="{Binding SelectedProjectFile}">
+      <ListView.View>
+        <GridView>
+          <GridViewColumn Header="プロジェクト or ファイル" DisplayMemberBinding="{Binding}" />
+        </GridView>
+      </ListView.View>
+    </ListView>
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="auto" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="auto" />
+      </Grid.ColumnDefinitions>
+      <Button Grid.Column="1" Content="プロジェクトの追加" Command="{Binding AddProjectFileCommand}" />
+      <Button Grid.Column="3" Content="プロジェクトの削除" IsEnabled="{Binding IsSelectedProjectFile}" Command="{Binding RemoveProjectFileCommand}" />
+    </Grid>
+    <ListView Grid.Row="4" d:ItemsSource="{d:SampleData ItemCount=2}" ItemsSource="{Binding ProjectFiles}" SelectedItem="{Binding SelectedReferFolder}">
+      <ListView.View>
+        <GridView>
+          <GridViewColumn Header="コピー元" DisplayMemberBinding="{Binding ReferenceFolder}" />
+          <GridViewColumn Header="コピー先" DisplayMemberBinding="{Binding BaseFolder}" />
+        </GridView>
+      </ListView.View>
+    </ListView>
+    <Grid Grid.Row="6">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="auto" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="auto" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="auto" />
+      </Grid.ColumnDefinitions>
+      <Button Grid.Column="1" Content="フォルダの追加" Command="{Binding AddReferFolderCommand}" />
+      <Button Grid.Column="3" Content="フォルダの編集" IsEnabled="{Binding IsSelectedReferFolder}" Command="{Binding EditReferFolderCommand}" />
+      <Button Grid.Column="5" Content="フォルダの削除" IsEnabled="{Binding IsSelectedReferFolder}" Command="{Binding RemoveReferFolderCommand}" />
+    </Grid>
+    <Separator Grid.Row="7" Margin="-16,0" />
+    <ListView Grid.Row="8" d:ItemsSource="{d:SampleData ItemCount=5}" ItemsSource="{Binding TargetFiles}">
+      <ListView.View>
+        <GridView>
+          <GridViewColumn Header="コピー">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <CheckBox IsChecked="{Binding IsCopy}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+          <GridViewColumn Header="ステータス" DisplayMemberBinding="{Binding Status}" />
+          <GridViewColumn Header="コピー元" DisplayMemberBinding="{Binding SourceFile}" />
+          <GridViewColumn Header="コピー元バージョン" DisplayMemberBinding="{Binding SourceVersion}" />
+          <GridViewColumn Header="コピー元最終更新日時" DisplayMemberBinding="{Binding SourceLastTime}" />
+          <GridViewColumn Header="コピー先" DisplayMemberBinding="{Binding DestinationFile}" />
+          <GridViewColumn Header="コピー先バージョン" DisplayMemberBinding="{Binding DestinationVersion}" />
+          <GridViewColumn Header="コピー先最終更新日時" DisplayMemberBinding="{Binding DestinationLastTime}" />
+        </GridView>
+      </ListView.View>
+      <ListView.ItemContainerStyle>
+        <Style TargetType="ListViewItem">
+          <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+        </Style>
+      </ListView.ItemContainerStyle>
+      <ListView.InputBindings>
+        <KeyBinding Key="Space" Command="{Binding CheckIsCopyCommand}" />
+      </ListView.InputBindings>
+    </ListView>
+    <CheckBox Grid.Row="10" Content="コピー対象ファイルのみ表示する" />
+    <ProgressBar Grid.Row="11" Height="4" Margin="0,4" d:Visibility="Visible"
+                 Visibility="{Binding IsProgressBarVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                 IsIndeterminate="{Binding IsIndeterminate}" Minimum="{Binding ProgressMin}" Maximum="{Binding ProgressMax}"
+                 Value="{Binding ProgressValue}" />
+    <Grid Grid.Row="12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="96" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="96" />
+      </Grid.ColumnDefinitions>
+      <Label Grid.Column="0" Content="{Binding ProgressText}" Visibility="{Binding IsProgressBarVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+      <Button Grid.Column="1" Content="確認" Command="{Binding CheckTargetFilesCommand}" />
+      <Button Grid.Column="3" Content="コピー" Command="{Binding CopyTargetFilesCommand}" IsEnabled="{Binding IsReadyCopy}"/>
+    </Grid>
+  </Grid>
+</Window>

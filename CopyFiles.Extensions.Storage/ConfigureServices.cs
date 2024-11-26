@@ -12,5 +12,4 @@ public static class ConfigureServices
 		services.AddTransient<IPersistAndRestoreService, PersistAndRestoreService>();
 		return services;
 	}
-	public static string? PersistFilePath { get; set; }
 }

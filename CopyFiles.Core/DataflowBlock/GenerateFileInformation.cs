@@ -5,7 +5,7 @@ namespace CopyFiles.Core.DataflowBlock;
 
 public class GenerateFileInformation
 {
-	public static TargetFileInformation Generate( List<ReferFolder> settings, string filePath, bool isAbsolute )
+	public static TargetFileInformation Generate( IEnumerable<ReferFolder> settings, string filePath, bool isAbsolute )
 	{
 		foreach( var setting in settings )
 		{
@@ -26,8 +26,7 @@ public class GenerateFileInformation
 						continue;
 					}
 				}
-				TargetFileInformation fileInfo = new( new( filePath, true ), new( refPath, isAbsolute ) );
-				return fileInfo;
+				return new( new( filePath, true ), new( refPath, isAbsolute ) );
 			}
 		}
 		throw new InvalidDataException( $"{filePath} をコピーするための設定がありません。" );

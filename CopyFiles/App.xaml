@@ -6,7 +6,10 @@
   <Application.Resources>
     <ResourceDictionary>
       <Style TargetType="Button">
-        <Setter Property="Padding" Value="4" />
+        <Setter Property="Padding" Value="16,4" />
+      </Style>
+      <Style TargetType="TextBox">
+        <Setter Property="VerticalContentAlignment" Value="Center" />
       </Style>
       <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </ResourceDictionary>

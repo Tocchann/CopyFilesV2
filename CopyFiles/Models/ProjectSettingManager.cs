@@ -9,24 +9,11 @@ using System.Threading.Tasks;
 
 namespace CopyFiles.Models;
 
-public class ProjectSettingModel
+public class ProjectSettingManager
 {
 	public Dictionary<string,ProjectSetting> ProjectSettings { get; } = new();
 	public string? ProjectName { get; set; }
 
 	[JsonIgnore]
 	public ProjectSetting CurrentSetting => !string.IsNullOrEmpty( ProjectName ) ? ProjectSettings[ProjectName] : throw new InvalidOperationException( "ProjectName is empty" );
-	public ProjectSettingModel( IPersistAndRestoreService persistAndRestoreService )
-	{
-		// レストアだけ自力で行うがほかは自動でよい
-		var model = persistAndRestoreService.RestoreData<ProjectSettingModel>();
-		if( model is not null )
-		{
-			ProjectSettings = model.ProjectSettings;
-			ProjectName = model.ProjectName;
-		}
-	}
-	public ProjectSettingModel()
-	{
-	}
 }

@@ -5,7 +5,7 @@ namespace CopyFiles.Core.Models;
 
 public class FileInformation
 {
-	public string FilePath { get; }
+	public string FilePath { get; init; }
 	public Version? FileVersion { get; set; }
 	public DateTime? LastWriteTime { get; set; }
 	public long FileSize { get; set; }
@@ -42,11 +42,11 @@ public class TargetFileInformation
 	/// <summary>
 	/// コピー元ファイル情報
 	/// </summary>
-	public FileInformation BaseFileInfo { get; }
+	public FileInformation BaseFileInfo { get; init; }
 	/// <summary>
 	/// コピー先ファイル情報
 	/// </summary>
-	public FileInformation ReferFileInfo { get; }
+	public FileInformation ReferFileInfo { get; init; }
 	/// <summary>
 	/// ファイルの比較状態
 	/// </summary>

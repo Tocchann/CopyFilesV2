@@ -8,13 +8,13 @@ public class ReferFolder
 public class ProjectSetting
 {
 	// 実際のコピー対象を決めるためのプロジェクトファイル一覧
-	public required List<string> ProjectFiles { get; set; }
+	public required List<string> ProjectFiles { get; init; }
 
 	// ビルド結果とインストーラ参照パス間でコピーするための設定
-	public required List<ReferFolder> CopySettings { get; set; }
+	public required List<ReferFolder> CopySettings { get; init; }
 
 	// 署名用ファイル設定(コピー元は圧縮ファイル対象ベースパス、コピー先は圧縮ファイルを作成するフォルダ)
-	public required ReferFolder SignerFileSetting { get; set; }
+	public required ReferFolder SignerFileSetting { get; init; }
 	// 圧縮ファイルにつけるプレフィックス
-	public required string ZipFileNamePrefix { get; set; }
+	public required string ZipFileNamePrefix { get; init; }
 }

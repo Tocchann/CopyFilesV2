@@ -8,22 +8,22 @@ public class PersistAndRestoreService( ILogger<PersistAndRestoreService> m_logge
 	public async Task PersistDataAsync<TValue>( TValue content, CancellationToken token = default ) where TValue : class
 	{
 		m_logger.LogInformation( System.Reflection.MethodBase.GetCurrentMethod()?.Name );
-		if( ConfigureServices.PersistFilePath is null )
+		if( string.IsNullOrEmpty( PersistFilePath ) )
 		{
 			throw new InvalidOperationException( "ConfigureServices.PersistFilePath is not set" );
 		}
-		await m_fileService.SaveAsync( ConfigureServices.PersistFilePath, content, token );
+		await m_fileService.SaveAsync( PersistFilePath, content, token );
 	}
 	public async ValueTask<TResult?> RestoreDataAsync<TResult>( CancellationToken token = default ) where TResult : class
 	{
 		m_logger.LogInformation( System.Reflection.MethodBase.GetCurrentMethod()?.Name );
-		if( ConfigureServices.PersistFilePath is null )
+		if( string.IsNullOrEmpty( PersistFilePath ) )
 		{
 			throw new InvalidOperationException( "ConfigureServices.PersistFilePath is not set" );
 		}
 		try
 		{
-			return await m_fileService.ReadAsync<TResult>( ConfigureServices.PersistFilePath, token );
+			return await m_fileService.ReadAsync<TResult>( PersistFilePath, token );
 		}
 		catch( Exception ex )
 		{
@@ -34,13 +34,13 @@ public class PersistAndRestoreService( ILogger<PersistAndRestoreService> m_logge
 	public TResult? RestoreData<TResult>() where TResult : class
 	{
 		m_logger.LogInformation( System.Reflection.MethodBase.GetCurrentMethod()?.Name );
-		if( ConfigureServices.PersistFilePath is null )
+		if( string.IsNullOrEmpty( PersistFilePath ) )
 		{
 			throw new InvalidOperationException( "ConfigureServices.PersistFilePath is not set" );
 		}
 		try
 		{
-			return m_fileService.Read<TResult>( ConfigureServices.PersistFilePath );
+			return m_fileService.Read<TResult>( PersistFilePath );
 		}
 		catch( Exception ex )
 		{
@@ -48,4 +48,5 @@ public class PersistAndRestoreService( ILogger<PersistAndRestoreService> m_logge
 			return default;
 		}
 	}
+	public string? PersistFilePath { get; set; }
 }

@@ -51,6 +51,7 @@ public class FileService : IFileService
 			var options = new JsonSerializerOptions
 			{
 				Encoder = JavaScriptEncoder.Create( UnicodeRanges.All ),
+				WriteIndented = true,
 			};
 			await JsonSerializer.SerializeAsync<TValue>( stream, content, options, token );
 		}

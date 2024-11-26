@@ -15,7 +15,7 @@ public static class CompareFileInfo
 	// コピーのための比較を行う
 	public static TargetFileInformation CompareCopy( TargetFileInformation targetInfo, CancellationToken token )
 	{
-		// ベースを最新にするために参照先からコピーしてくるので参照先は絶対にあるはずという前提
+		// ベースを最新にするために参照先からコピーしてくるので参照先は絶対にあるはず
 		if( !targetInfo.ReferFileInfo.Exists )
 		{
 			throw new FileNotFoundException( targetInfo.ReferFileInfo.FilePath );
@@ -26,9 +26,8 @@ public static class CompareFileInfo
 			// ファイルサイズと日付が同じかどうかは調査対象としない
 			using( var hashAlgorithm = SHA256.Create() )
 			{
-				var baseHash = GetFileHash( hashAlgorithm, targetInfo.BaseFileInfo.FilePath );
-				var referHash = GetFileHash( hashAlgorithm, targetInfo.ReferFileInfo.FilePath );
-				token.ThrowIfCancellationRequested();
+				var baseHash = GetFileHash( hashAlgorithm, targetInfo.BaseFileInfo.FilePath, token );
+				var referHash = GetFileHash( hashAlgorithm, targetInfo.ReferFileInfo.FilePath, token );
 				// 内容的に一致とみなせる場合
 				if( baseHash == referHash )
 				{
@@ -61,7 +60,7 @@ public static class CompareFileInfo
 					{
 						targetInfo.CompareStatus = CompareStatus.UnMatchSameVersion;
 					}
-					// バージョンも一致しないので、丸っと変わっている
+					// バージョンがないか一致していないので、普通に異なるファイルという認識でよい
 					else
 					{
 						targetInfo.CompareStatus = CompareStatus.UnMatch;
@@ -83,16 +82,20 @@ public static class CompareFileInfo
 		if( targetInfo.BaseFileInfo.Exists )
 		{
 			var fileImage = File.ReadAllBytes( targetInfo.BaseFileInfo.FilePath );
+			token.ThrowIfCancellationRequested();
 			targetInfo.CompareStatus = PeFile.IsSetSignatgure( fileImage ) ? CompareStatus.ExistSignature : CompareStatus.NotExistSignature;
 		}
 		return targetInfo;
 	}
-	private static string GetFileHash( HashAlgorithm hashAlgorithm, string filePath )
+	private static string GetFileHash( HashAlgorithm hashAlgorithm, string filePath, CancellationToken token )
 	{
 		// 計算処理はオンメモリで行う(いろいろ面倒なのでね)
 		var fileImage = File.ReadAllBytes( filePath );
+		token.ThrowIfCancellationRequested();
 		var hashImage = PeFile.GetHashSourceBytes( fileImage );
+		token.ThrowIfCancellationRequested();
 		var hashBytes = hashAlgorithm.ComputeHash( hashImage );
+		token.ThrowIfCancellationRequested();
 		//	比較を単純な文字列の比較にするため、16進数文字列に変換する
 		var result = Convert.ToHexString( hashBytes ).ToLower();
 		return result;

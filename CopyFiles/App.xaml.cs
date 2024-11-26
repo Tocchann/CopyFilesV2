@@ -14,12 +14,15 @@ public partial class App : Application
 {
 	public static T GetService<T>() where T : class => host_.Services.GetService<T>()!;
 
+	public static ProjectSettingManager ProjectSettingManager { get; set; }
+
 	static App()
 	{
 		host_ = Host.CreateDefaultBuilder()
 			.ConfigureLogging( ( context, logging ) => logging.AddDebug() )
 			.ConfigureServices( OnConfigureServices )
 			.Build();
+		ProjectSettingManager = new();
 	}
 	private static void OnConfigureServices( HostBuilderContext context, IServiceCollection services )
 	{
@@ -32,10 +35,18 @@ public partial class App : Application
 		services.AddHostedService<Services.ApplicationHostService>();
 
 		// 起動時の選択ウィンドウ(そのままメインウィンドウとして稼働する)
-		services.AddTransient<ViewModels.SelectWorkViewModel>();
-		services.AddTransient<Views.SelectWorkView>();
 
-		services.AddSingleton<ProjectSettingModel>();
+		services.AddTransient<ViewModels.SelectWorkViewModel>();
+		services.AddTransient<Contract.Views.ISelectWorkView, Views.SelectWorkView>();
+
+		services.AddTransient<ViewModels.AddSolutionViewModel>();
+		services.AddTransient<Contract.Views.IAddSolutionView,Views.AddSolutionView>();
+
+		services.AddTransient<ViewModels.CollectTargetFilesViewModel>();
+		services.AddTransient<Contract.Views.ICollectTargetFilesView, Views.CollectTargetFilesView>();
+
+		services.AddTransient<ViewModels.EditReferFolderViewModel>();
+		services.AddTransient<Contract.Views.IEditReferFolderView, Views.EditReferFolderView>();
 	}
 	private static IHost host_;
 

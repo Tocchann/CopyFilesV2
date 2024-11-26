@@ -12,33 +12,38 @@
   <d:Window.DataContext>
     <vm:SelectWorkViewModel />
   </d:Window.DataContext>
-  <Grid Margin="16,12">
+  <Grid Margin="16">
     <Grid.RowDefinitions>
       <RowDefinition Height="auto" />
+      <RowDefinition Height="4" />
       <RowDefinition Height="auto" />
     </Grid.RowDefinitions>
-    <Grid Grid.Row="0" Margin="0,4">
+    <Grid Grid.Row="0">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="auto" />
         <ColumnDefinition Width="250" />
-        <ColumnDefinition Width="48" />
-        <ColumnDefinition Width="48" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="auto" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="auto" />
       </Grid.ColumnDefinitions>
       <Label Grid.Column="0" Content="対象ソリューション:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
       <ComboBox Grid.Column="1" ItemsSource="{Binding ProjectSettingNames}" SelectedItem="{Binding SelectProjectSettingName}"
-                d:ItemsSource="{d:SampleData ItemCount=5}" d:SelectedIndex="0" />
-      <Button Grid.Column="2" Content="追加" Margin="4,0,0,0" Command="{Binding AddSolutionCommand}" />
-      <Button Grid.Column="3" Content="削除" Margin="4,0,0,0" Command="{Binding RemoveSolutionCommand}" />
+                d:ItemsSource="{d:SampleData ItemCount=5}" d:SelectedIndex="0" VerticalContentAlignment="Center" />
+      <Button Grid.Column="3" Content="追加" Command="{Binding AddSolutionCommand}" />
+      <Button Grid.Column="5" Content="削除" Command="{Binding RemoveSolutionCommand}" IsEnabled="{Binding IsSelectedProject}" />
     </Grid>
-    <Grid Grid.Row="1" Margin="0,4">
+    <Grid Grid.Row="2">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition />
-        <ColumnDefinition />
-        <ColumnDefinition />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
-      <Button Grid.Column="0" Margin="0,0,2,0" Content="対象ファイルの収集" Command="{Binding CollectTargetFilesCommand}" />
-      <Button Grid.Column="1" Margin="2,0,2,0" Content="未署名ファイルの圧縮" Command="{Binding ArchiveNonSignedFilesCommand}" />
-      <Button Grid.Column="2" Margin="2,0,0,0" Content="署名済みファイルのコピー" Command="{Binding CopySignedFilesCommand}" />
+      <Button Grid.Column="0" Content="対象ファイルの収集" Command="{Binding CollectTargetFilesCommand}" IsEnabled="{Binding IsSelectedProject}" />
+      <Button Grid.Column="2" Content="未署名ファイルの圧縮" Command="{Binding ArchiveNonSignedFilesCommand}" IsEnabled="{Binding IsSelectedProject}" />
+      <Button Grid.Column="4" Content="署名済みファイルのコピー" Command="{Binding CopySignedFilesCommand}" IsEnabled="{Binding IsSelectedProject}" />
     </Grid>
   </Grid>
 </Window>

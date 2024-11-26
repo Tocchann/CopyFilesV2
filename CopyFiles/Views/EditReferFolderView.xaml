@@ -1,0 +1,53 @@
+﻿<Window x:Class="CopyFiles.Views.EditReferFolderView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CopyFiles.Views"
+        xmlns:vm="clr-namespace:CopyFiles.ViewModels"
+        mc:Ignorable="d" x:Name="dialog"
+        Title="{Binding DialogTitle}"
+        ResizeMode="NoResize" WindowStyle="SingleBorderWindow" SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner">
+  <d:Window.DataContext>
+    <vm:EditReferFolderViewModel />
+  </d:Window.DataContext>
+  <Grid Margin="16">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="auto" />
+      <ColumnDefinition Width="480" />
+      <ColumnDefinition Width="2" />
+      <ColumnDefinition Width="auto" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="4" />
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="4" />
+      <RowDefinition Height="auto" />
+    </Grid.RowDefinitions>
+    <Label Grid.Row="0" Grid.Column="0" Content="基準フォルダ:" />
+    <TextBox Grid.Row="0" Grid.Column="1" d:Text="BaseFolder" Text="{Binding BaseFolder}" />
+    <Button Grid.Row="0" Grid.Column="3" Content="..."  Padding="4" Command="{Binding ChangeBaseFolderCommand}" />
+    <Label Grid.Row="2" Grid.Column="0" Content="参照フォルダ:" />
+    <TextBox Grid.Row="2" Grid.Column="1" d:Text="ReferenceFolder" Text="{Binding ReferenceFolder}" />
+    <Button Grid.Row="2" Grid.Column="3" Content="..."  Padding="4" Command="{Binding ChangeReferenceFolderCommand}" />
+    <Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="96" />
+        <ColumnDefinition Width="4" />
+        <ColumnDefinition Width="96" />
+      </Grid.ColumnDefinitions>
+      <Button Grid.Column="1" Content="OK" IsDefault="True" Command="{Binding OKCommand}" />
+      <Button Grid.Column="3" Content="キャンセル" IsCancel="True">
+        <i:Interaction.Triggers>
+          <i:EventTrigger EventName="Click">
+            <i:ChangePropertyAction TargetObject="{Binding ElementName=dialog}" PropertyName="DialogResult" Value="false" />
+          </i:EventTrigger>
+        </i:Interaction.Triggers>
+      </Button>
+    </Grid>
+  </Grid>
+</Window>
