@@ -56,8 +56,6 @@ public class ProjectFileReader
 										}
 									}
 								}
-								// ピックアップされるごとに出力することで、後続処理を順次おこなえるようにする(多分流れ込んでいくと思うんだよね…)
-								Trace.WriteLine( $"Add:{sourcePath}" );
 								yield return sourcePath;
 							}
 						}

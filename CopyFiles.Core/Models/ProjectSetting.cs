@@ -19,7 +19,7 @@ public class ProjectSetting
 	// 署名用ファイル設定(コピー元は圧縮ファイル対象ベースパス、コピー先は圧縮ファイルを作成するフォルダ)
 	public required ReferFolder SignerFileSetting { get; init; }
 	// 圧縮ファイルにつけるプレフィックス
-	public required string ZipFileNamePrefix { get; init; }
+	public required string ZipFileNamePrefix { get; set; }
 	// 圧縮対象のみ表示の絞り込みフラグ
 	public bool IsNeedArchive { get; set; }
 }

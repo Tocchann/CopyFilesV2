@@ -83,7 +83,15 @@ public static class CompareFileInfo
 		{
 			var fileImage = File.ReadAllBytes( targetInfo.BaseFileInfo.FilePath );
 			token.ThrowIfCancellationRequested();
-			targetInfo.CompareStatus = PeFile.IsSetSignatgure( fileImage ) ? CompareStatus.ExistSignature : CompareStatus.NotExistSignature;
+			if( PeFile.IsValidPE( fileImage ) )
+			{
+				targetInfo.CompareStatus = PeFile.IsSetSignatgure( fileImage ) ? CompareStatus.ExistSignature : CompareStatus.NotExistSignature;
+			}
+			else
+			{
+				// 署名していないので何もしない
+				targetInfo.CompareStatus = CompareStatus.NoAction;
+			}
 		}
 		return targetInfo;
 	}

@@ -15,7 +15,7 @@ public partial class App : Application
 	public static T GetService<T>() where T : class => host_.Services.GetService<T>()!;
 
 	public static ProjectSettingManager ProjectSettingManager { get; set; }
-
+	public static IDispAlert DispAlert { get; set; }
 	static App()
 	{
 		host_ = Host.CreateDefaultBuilder()
@@ -23,6 +23,10 @@ public partial class App : Application
 			.ConfigureServices( OnConfigureServices )
 			.Build();
 		ProjectSettingManager = new();
+		// メッセージボックスは全体で一つでいいでしょう
+		DispAlert = GetService<IDispAlert>();
+		DispAlert.Title = "インストーラビルドサポートツール";
+		DispAlert.UseTaskDialog = true; // ちょっと色気を出してみる
 	}
 	private static void OnConfigureServices( HostBuilderContext context, IServiceCollection services )
 	{
@@ -47,15 +51,14 @@ public partial class App : Application
 
 		services.AddTransient<ViewModels.EditReferFolderViewModel>();
 		services.AddTransient<Contract.Views.IEditReferFolderView, Views.EditReferFolderView>();
+
+		services.AddTransient<ViewModels.ArchiveNonSignedFilesViewModel>();
+		services.AddTransient<Contract.Views.IArchiveNonSignedFilesView, Views.ArchiveNonSignedFilesView>();
 	}
 	private static IHost host_;
 
 	private async void OnStartupAsync( object sender, StartupEventArgs e )
 	{
-		// メッセージボックスのタイトル設定を行う(ちょっと色気を出してタスクダイアログを使う)
-		var dispAlert = GetService<IDispAlert>();
-		dispAlert.Title = "インストーラビルドサポートツール";
-		dispAlert.UseTaskDialog = true;	// ちょっと色気を出してみる
 		await host_.StartAsync();
 	}
 	private async void OnExitAsync( object sender, ExitEventArgs e )

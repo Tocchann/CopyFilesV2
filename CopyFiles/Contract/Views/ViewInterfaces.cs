@@ -20,3 +20,7 @@ public interface IEditReferFolderView : IBaseView
 {
 	public EditReferFolderViewModel ViewModel { get; }
 }
+public interface IArchiveNonSignedFilesView : IBaseView
+{
+	public ArchiveNonSignedFilesViewModel ViewModel { get; }
+}

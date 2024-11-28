@@ -6,17 +6,19 @@ using System.Windows;
 namespace CopyFiles.Views;
 
 /// <summary>
-/// CollectTargetFilesView.xaml の相互作用ロジック
+/// ArchiveNonSignedFilesView.xaml の相互作用ロジック
 /// </summary>
-public partial class CollectTargetFilesView : ICollectTargetFilesView
+public partial class ArchiveNonSignedFilesView : IArchiveNonSignedFilesView
 {
-	public CollectTargetFilesView( CollectTargetFilesViewModel vm )
+	public ArchiveNonSignedFilesView( ArchiveNonSignedFilesViewModel vm )
 	{
 		InitializeComponent();
 		DataContext = vm;
 		ViewModel = vm;
 	}
-	public CollectTargetFilesViewModel ViewModel { get; init; }
+
+	public ArchiveNonSignedFilesViewModel ViewModel { get; init; }
+
 	public bool? ShowWindow()
 	{
 		Owner = Utilities.GetOwnerWindow();

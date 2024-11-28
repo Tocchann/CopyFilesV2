@@ -2,6 +2,7 @@
 using CopyFiles.Core.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,25 +48,17 @@ public static class ListFilesTask
 			projectFilePath => ProjectFileReader.Read( projectFilePath, token ), blockOptions );
 
 		// 同じファイルが複数含まれないように列挙しないとダメ
-		var addBaseFilesBlock =
-			copyMode ?
-				new ActionBlock<string>( file =>
-				{
-					// 収集パスが対象としているものだけターゲットにする
-					if( setting.CopySettings.Any( setting => file.StartsWith( setting.BaseFolder ) ) )
-					{
-						baseFiles.Add( file );
-					}
-				}, singleBlockOptions ) :
-				new ActionBlock<string>( file =>
-				{
-					// 署名用にピックアップしているものは一か所に集約しているのでそれだけチェック
-					if( file.StartsWith( setting.SignerFileSetting.BaseFolder ) )
-					{
-						baseFiles.Add( file );
-					}
-				}, singleBlockOptions );
-
+		Func<string, bool> filterAddFile = 
+			copyMode ? file => setting.CopySettings.Any( s => file.StartsWith( s.BaseFolder ) )
+					 : file => file.StartsWith( setting.SignerFileSetting.BaseFolder );
+		var addBaseFilesBlock = new ActionBlock<string>( file =>
+		{
+			if( filterAddFile( file ) )
+			{
+				Trace.WriteLine( $"Add:{file}" );
+				baseFiles.Add( file );
+			}
+		}, singleBlockOptions );
 		readFilesBlock.LinkTo( addBaseFilesBlock, linkOptions );
 
 		foreach( var projectFile in setting.ProjectFiles )
@@ -138,7 +131,7 @@ public static class ListFilesTask
 	}
 
 
-	public static async Task<List<TargetFileInformation>> ListNotSignedFilesAsync( ProjectSetting setting, List<string> baseFiles, IProgress<int> progress, CancellationToken token )
+	public static async Task<IEnumerable<TargetFileInformation>> ListNotSignedFilesAsync( ProjectSetting setting, IEnumerable<string> baseFiles, IProgress<int> progress, CancellationToken token )
 	{
 		var targetFiles = new List<TargetFileInformation>();
 		if( setting.SignerFileSetting == null )

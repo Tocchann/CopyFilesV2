@@ -39,7 +39,7 @@ public partial class SelectWorkViewModel : ObservableObject
 				ProjectFiles = new(),
 				CopySettings = new(),
 				SignerFileSetting = new ReferFolder { BaseFolder = string.Empty, ReferenceFolder = string.Empty },
-				ZipFileNamePrefix = string.Empty,
+				ZipFileNamePrefix = dlg.ViewModel.SolutionName,
 			};
 			App.ProjectSettingManager.ProjectSettings.Add( setting );
 			ProjectSettingNames.Clear();
@@ -56,10 +56,10 @@ public partial class SelectWorkViewModel : ObservableObject
 	{
 		if( string.IsNullOrEmpty( SelectProjectSettingName ) )
 		{
-			m_dispAlert.Show( "プロジェクトが選択されていません", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+			App.DispAlert.Show( "プロジェクトが選択されていません", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
 			return;
 		}
-		var result = m_dispAlert.Show( SelectProjectSettingName + "を削除しますか？", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question );
+		var result = App.DispAlert.Show( SelectProjectSettingName + "を削除しますか？", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question );
 		if( result == IDispAlert.Result.Yes )
 		{
 			var name = SelectProjectSettingName;
@@ -80,33 +80,23 @@ public partial class SelectWorkViewModel : ObservableObject
 	[RelayCommand]
 	void ArchiveNonSignedFiles()
 	{
-		// 署名されていないファイルをアーカイブする
+		var dlg = App.GetService<Contract.Views.IArchiveNonSignedFilesView>();
+		dlg.ShowWindow();
 	}
 	[RelayCommand]
 	void CopySignedFiles()
 	{
+		App.DispAlert.Show( "工事中…署名済みファイルの展開処理" );
 		// 署名されたファイルを収集先に再コピー
 		// 圧縮ファイルを指定または、展開イメージのフォルダを指定のどちらかなんだろうけど…圧縮ファイルかなぁ？
 	}
 
-	public SelectWorkViewModel( ILogger<SelectWorkViewModel> logger, IDispAlert dispAlert )
+	public SelectWorkViewModel()
 	{
-		m_logger = logger;
-		m_dispAlert = dispAlert;
-
 		foreach( var key in App.ProjectSettingManager.ProjectSettings.Select( setting => setting.Name ) )
 		{
 			ProjectSettingNames.Add( key );
 		}
 		SelectProjectSettingName = App.ProjectSettingManager.ProjectName;
 	}
-	[DesignOnly(true)]
-#pragma warning disable CS8618 // null 非許容のフィールドには、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、Null 許容として宣言することを検討してください。
-	public SelectWorkViewModel()
-#pragma warning restore CS8618 // null 非許容のフィールドには、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、Null 許容として宣言することを検討してください。
-	{
-		//Debug.Assert( false );  //	実行されないはず
-	}
-	private ILogger<SelectWorkViewModel> m_logger;
-	private IDispAlert m_dispAlert;
 }

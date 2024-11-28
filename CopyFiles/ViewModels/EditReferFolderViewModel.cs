@@ -4,6 +4,7 @@ using CopyFiles.Core.Models;
 using CopyFiles.Extensions.UI.Abstractions;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace CopyFiles.ViewModels;
 
@@ -73,12 +74,12 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 	{
 		if( string.IsNullOrWhiteSpace( BaseFolder ) )
 		{
-			m_dispAlert.Show( "基準フォルダが指定されていません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+			App.DispAlert.Show( "基準フォルダが指定されていません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
 			return;
 		}
 		if( string.IsNullOrWhiteSpace( ReferenceFolder ) )
 		{
-			m_dispAlert.Show( "参照フォルダが指定されていません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+			App.DispAlert.Show( "参照フォルダが指定されていません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
 			return;
 		}
 		// コピーの場合は、
@@ -86,7 +87,7 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 		{
 			if( !Directory.Exists( ReferenceFolder ) )
 			{
-				m_dispAlert.Show( "参照フォルダが存在しません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+				App.DispAlert.Show( "参照フォルダが存在しません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
 				return;
 			}
 		}
@@ -94,7 +95,7 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 		{
 			if( !Directory.Exists( BaseFolder ) )
 			{
-				m_dispAlert.Show( "基準フォルダが存在しません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+				App.DispAlert.Show( "基準フォルダが存在しません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
 				return;
 			}
 		}
@@ -104,21 +105,10 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 			// 参照フォルダ(コピー元)が同じで別の場所にコピーはない(逆はある)
 			if( App.ProjectSettingManager.CurrentSetting.CopySettings.Any( r => r.ReferenceFolder == ReferenceFolder && r.BaseFolder != BaseFolder ) )
 			{
-				m_dispAlert.Show( "参照フォルダが重複しています。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+				App.DispAlert.Show( "参照フォルダが重複しています。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
 				return;
 			}
 		}
 		DialogResult = true;
 	}
-	[DesignOnly(true)]
-#pragma warning disable CS8618 // null 非許容のフィールドには、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、Null 許容として宣言することを検討してください。
-	public EditReferFolderViewModel()
-#pragma warning restore CS8618 // null 非許容のフィールドには、コンストラクターの終了時に null 以外の値が入っていなければなりません。'required' 修飾子を追加するか、Null 許容として宣言することを検討してください。
-	{
-	}
-	public EditReferFolderViewModel( IDispAlert dispAlert ) : base()
-	{
-		m_dispAlert = dispAlert;
-	}
-	private IDispAlert m_dispAlert;
 }
