@@ -27,7 +27,10 @@ public partial class ArchiveNonSignedFilesViewModel : MainWorkBaseViewModel
 
 	partial void OnZipFileNamePrefixChanged( string value )
 	{
-		App.ProjectSettingManager.CurrentSetting.ZipFileNamePrefix = value;
+		if( App.ProjectSettingManager?.ProjectName != null)
+		{
+			App.ProjectSettingManager.CurrentSetting.ZipFileNamePrefix = value;
+		}
 	}
 
 	[RelayCommand]
@@ -192,7 +195,15 @@ public partial class ArchiveNonSignedFilesViewModel : MainWorkBaseViewModel
 
 	public ArchiveNonSignedFilesViewModel()
 	{
-		ReferFolderItem = new( App.ProjectSettingManager.CurrentSetting.SignerFileSetting );
-		ZipFileNamePrefix = App.ProjectSettingManager.CurrentSetting.ZipFileNamePrefix;
+		if( App.ProjectSettingManager?.ProjectName != null )
+		{
+			ReferFolderItem = new( App.ProjectSettingManager.CurrentSetting.SignerFileSetting );
+			ZipFileNamePrefix = App.ProjectSettingManager.CurrentSetting.ZipFileNamePrefix;
+		}
+		else
+		{
+			ReferFolderItem = new();
+			ZipFileNamePrefix = string.Empty;
+		}
 	}
 }

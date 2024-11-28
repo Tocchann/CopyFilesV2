@@ -199,6 +199,13 @@ public partial class CollectTargetFilesViewModel : MainWorkBaseViewModel
 
 	public CollectTargetFilesViewModel()
 	{
-		ReferFolders = [.. App.ProjectSettingManager.CurrentSetting.CopySettings.Select( x => new ReferFolderItem( x ) )];
+		if( App.ProjectSettingManager?.ProjectName != null )
+		{
+			ReferFolders = [.. App.ProjectSettingManager.CurrentSetting.CopySettings.Select( x => new ReferFolderItem( x ) )];
+		}
+		else
+		{
+			ReferFolders = new();
+		}
 	}
 }

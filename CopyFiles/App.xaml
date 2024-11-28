@@ -5,9 +5,9 @@
              Startup="OnStartupAsync" Exit="OnExitAsync" ThemeMode="System">
   <Application.Resources>
     <ResourceDictionary>
-      <!--<ResourceDictionary.MergedDictionaries>
+      <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/PresentationFramework.Fluent;component/Themes/Fluent.xaml" />
-      </ResourceDictionary.MergedDictionaries>-->
+      </ResourceDictionary.MergedDictionaries>
       <Style TargetType="TextBox">
         <Setter Property="VerticalContentAlignment" Value="Center" />
       </Style>

@@ -107,9 +107,16 @@ public abstract partial class MainWorkBaseViewModel : ObservableObject
 
 	public MainWorkBaseViewModel()
 	{
-		ProjectFiles = [.. App.ProjectSettingManager.CurrentSetting.ProjectFiles];
 		TargetFiles = new();
-		IsCheckedNeedCopy = App.ProjectSettingManager.CurrentSetting.IsNeedCopy;
+		if( App.ProjectSettingManager.ProjectName != null )
+		{
+			ProjectFiles = [.. App.ProjectSettingManager.CurrentSetting.ProjectFiles];
+			IsCheckedNeedCopy = App.ProjectSettingManager.CurrentSetting.IsNeedCopy;
+		}
+		else
+		{
+			ProjectFiles = new();
+		}
 	}
 	protected abstract void ListupTargetFiles();
 	protected void OnIsCheckedChanged()

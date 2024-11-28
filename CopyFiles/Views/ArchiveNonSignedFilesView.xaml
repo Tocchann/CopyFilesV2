@@ -27,7 +27,7 @@
       <RowDefinition Height="auto" />
       <RowDefinition Height="auto" />
     </Grid.RowDefinitions>
-    <ListView Grid.Row="0" BorderThickness="1" BorderBrush="{StaticResource ControlStrokeColorDefaultBrush}"
+    <ListView Grid.Row="0" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
               ItemsSource="{Binding ProjectFiles}" SelectedItem="{Binding SelectedProjectFile}"
               d:ItemsSource="{d:SampleData ItemCount=2}" />
     <Grid Grid.Row="2">
