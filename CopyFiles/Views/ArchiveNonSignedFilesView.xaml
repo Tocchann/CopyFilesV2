@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:CopyFiles.ViewModels"
         xmlns:local="clr-namespace:CopyFiles.Views"
         mc:Ignorable="d"
-        Title="インストール対象ファイルの収集" WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Title="未署名ファイルの圧縮" WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Width="1280" Height="840" >
   <d:Window.DataContext>
     <vm:ArchiveNonSignedFilesViewModel />

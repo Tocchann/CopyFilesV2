@@ -1,22 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using CopyFiles.Contract.Views;
 using CopyFiles.Core.DataflowBlock;
-using CopyFiles.Core.Models;
 using CopyFiles.Core.Tasks;
 using CopyFiles.Extensions.UI.Abstractions;
-using CopyFiles.Extensions.UI.WPF;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
-using Microsoft.Win32;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks.Dataflow;
-using static CopyFiles.ViewModels.TargetFileInformationItem;
 
 namespace CopyFiles.ViewModels;
 

@@ -5,10 +5,7 @@ using CopyFiles.Extensions.UI.Abstractions;
 using CopyFiles.Extensions.UI.WPF;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Data;
-using Windows.Security.EnterpriseData;
-using static CopyFiles.ViewModels.TargetFileInformationItem;
 
 namespace CopyFiles.ViewModels;
 

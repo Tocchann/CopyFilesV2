@@ -2,11 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CopyFiles.Core.Models;
 using CopyFiles.Extensions.UI.Abstractions;
-using CopyFiles.Models;
-using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
 
 namespace CopyFiles.ViewModels;
 
@@ -87,8 +83,8 @@ public partial class SelectWorkViewModel : ObservableObject
 	void CopySignedFiles()
 	{
 		App.DispAlert.Show( "工事中…署名済みファイルの展開処理" );
-		// 署名されたファイルを収集先に再コピー
-		// 圧縮ファイルを指定または、展開イメージのフォルダを指定のどちらかなんだろうけど…圧縮ファイルかなぁ？
+		// ほかの処理みたいに確認のときに、zipファイルを参照して、それを元に選択式に展開するのがいいか？
+		// でもそのままでもいいと思うんだよねぇ…悩ましいところだけども…
 	}
 
 	public SelectWorkViewModel()

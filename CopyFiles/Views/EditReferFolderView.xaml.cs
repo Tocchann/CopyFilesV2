@@ -1,7 +1,6 @@
 ﻿using CopyFiles.Contract.Views;
 using CopyFiles.Extensions.UI.WPF;
 using CopyFiles.ViewModels;
-using System.Windows;
 
 namespace CopyFiles.Views;
 

@@ -2,9 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CopyFiles.Core.Models;
 using CopyFiles.Extensions.UI.Abstractions;
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.Serialization;
 
 namespace CopyFiles.ViewModels;
 

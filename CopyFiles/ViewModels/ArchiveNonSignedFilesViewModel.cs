@@ -1,19 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CopyFiles.Contract.Views;
-using CopyFiles.Core.Models;
 using CopyFiles.Core.Tasks;
 using CopyFiles.Extensions.UI.Abstractions;
-using CopyFiles.Extensions.UI.WPF;
-using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks.Dataflow;
-using Windows.Devices.WiFiDirect;
-using static CopyFiles.ViewModels.TargetFileInformationItem;
 
 namespace CopyFiles.ViewModels;
 

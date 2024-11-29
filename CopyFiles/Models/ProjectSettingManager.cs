@@ -1,11 +1,5 @@
 ﻿using CopyFiles.Core.Models;
-using CopyFiles.Extensions.Storage.Contract.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace CopyFiles.Models;
 
