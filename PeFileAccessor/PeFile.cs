@@ -1,5 +1,6 @@
 ﻿using PeFileAccessor.Interop;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,7 +14,7 @@ public class PeFile
 	/// </summary>
 	/// <param name="fileImage">ファイルイメージ(オンメモリチェック)</param>
 	/// <returns>PEファイル形式かどうかの判定結果</returns>
-	public static bool IsValidPE( byte[] fileImage )
+	public static bool IsValidPE( ReadOnlySpan<byte> fileImage )
 	{
 		var pos = GetPeSignaturePos( fileImage );
 		return pos != -1;
@@ -22,59 +23,70 @@ public class PeFile
 	/// PEファイルのSECTIONデータエリア内のハッシュ対象領域(にあたるもの)を取り出す
 	/// 理想的には、隙間部分をきれいに穴埋めしたいんだけどそこまではやらない
 	/// </summary>
-	/// <param name="fileImage">ファイルイメージ</param>
+	/// <param name="fileImageBytes">ファイルイメージ</param>
 	/// <returns>ハッシュをとる対象のデータ領域(を全部結合したデータ)</returns>
-	public static byte[] GetHashSourceBytes( byte[] fileImage )
+	public static byte[] GetHashSourceBytes( byte[] fileImageBytes )
 	{
-		// PEファイルではない場合は全域がハッシュ領域
-		if( !IsValidPE( fileImage ) )
+		if( !IsValidPE( fileImageBytes ) )
 		{
-			return fileImage;
+			return fileImageBytes;
 		}
-		// 実際のexe/dll ならセクションデータが存在するのでヘッダーサイズより大きなエリアになる
+
 		int minExeSize = Marshal.SizeOf<IMAGE_DOS_HEADER>() +
 			sizeof( uint ) +
 			Marshal.SizeOf<IMAGE_FILE_HEADER>() +
 			Marshal.SizeOf<IMAGE_OPTIONAL_HEADER32>() +
 			Marshal.SizeOf<IMAGE_DATA_DIRECTORY>() * Literals.IMAGE_NUMBEROF_DIRECTORY_ENTRIES +
-			Marshal.SizeOf<IMAGE_SECTION_HEADER>(); // 少なくとも１つ以上のセクションデータがあるはず
-													// ヘッダーだけしかないということはあり得ない(ここは簡易チェックでよい)
-		if( minExeSize >= fileImage.Length )
+			Marshal.SizeOf<IMAGE_SECTION_HEADER>();
+
+		if( minExeSize >= fileImageBytes.Length )
 		{
-			return fileImage;
+			return fileImageBytes;
 		}
-		// PEファイルアクセスはC形式構造体へのアクセスが頻発するので
-		// IntPtrなバッファにコピーしていろいろ処理する
-		var moduleBuffer = Marshal.AllocHGlobal( fileImage.Length );
-		Marshal.Copy( fileImage, 0, moduleBuffer, fileImage.Length );
-		var imageDosHeader = Marshal.PtrToStructure<IMAGE_DOS_HEADER>( moduleBuffer );
-		// 念のための再チェック(IsValidPEではじいている)
+		ReadOnlySpan<byte> fileImage = fileImageBytes;
+
+		var imageDosHeader = MemoryMarshal.Read<IMAGE_DOS_HEADER>( fileImage );
+
 		Debug.Assert( imageDosHeader.e_magic == Literals.IMAGE_DOS_SIGNATURE );
-		var signature = Marshal.ReadInt32( moduleBuffer, imageDosHeader.e_lfanew );
+
+		int signatureOffset = imageDosHeader.e_lfanew;
+		uint signature = BitConverter.ToUInt32( fileImage.Slice( signatureOffset ) );
 		Debug.Assert( signature == Literals.IMAGE_NT_SIGNATURE );
-		int headerOffset = imageDosHeader.e_lfanew + sizeof( uint ); //	シグネチャの後ろを指す
-		var imageFileHeader = Marshal.PtrToStructure<IMAGE_FILE_HEADER>( moduleBuffer + headerOffset );
+
+		int headerOffset = signatureOffset + sizeof( uint );
+
+		var imageFileHeader = MemoryMarshal.Read<IMAGE_FILE_HEADER>( fileImage.Slice( headerOffset ) );
 
 		int sectionDataStartPos = headerOffset + Marshal.SizeOf<IMAGE_FILE_HEADER>() + imageFileHeader.SizeOfOptionalHeader;
-		var sectionHeaderSize = Marshal.SizeOf<IMAGE_SECTION_HEADER>();
+		int sectionHeaderSize = Marshal.SizeOf<IMAGE_SECTION_HEADER>();
 		uint totalSize = 0;
-		(uint top, uint length)[] copyPos = new (uint top, uint length)[imageFileHeader.NumberOfSections];
+		List<(uint top, uint length)> copyPositions = new();
+
 		for( int index = 0 ; index < imageFileHeader.NumberOfSections ; index++ )
 		{
-			var imageSectionHeader = Marshal.PtrToStructure<IMAGE_SECTION_HEADER>( moduleBuffer + sectionDataStartPos + sectionHeaderSize * index );
-			int sectionStartPos = (int)imageSectionHeader.PointerToRawData;
-			int sectionEndPos = sectionStartPos + (int)imageSectionHeader.SizeOfRawData;
-			copyPos[index].top = imageSectionHeader.PointerToRawData;
-			copyPos[index].length = imageSectionHeader.SizeOfRawData;
-			totalSize += imageSectionHeader.SizeOfRawData;
+			int sectionHeaderOffset = sectionDataStartPos + sectionHeaderSize * index;
+			var imageSectionHeader = MemoryMarshal.Read<IMAGE_SECTION_HEADER>( fileImage.Slice( sectionHeaderOffset ) );
+
+			uint sectionStartPos = imageSectionHeader.PointerToRawData;
+			uint sectionSize = imageSectionHeader.SizeOfRawData;
+
+			// 範囲チェック
+			if( sectionStartPos + sectionSize <= fileImage.Length )
+			{
+				copyPositions.Add( (sectionStartPos, sectionSize) );
+				totalSize += sectionSize;
+			}
 		}
-		byte[] hashData = new byte[totalSize];
-		uint dstPos = 0;
-		foreach( (uint top, uint length) in copyPos )
+
+		var hashData = new byte[totalSize];
+		int destPosition = 0;
+
+		foreach( var (top, length) in copyPositions )
 		{
-			Array.Copy( fileImage, top, hashData, dstPos, length );
-			dstPos += length;
+			fileImage.Slice( (int)top, (int)length ).CopyTo( hashData.AsSpan( destPosition ) );
+			destPosition += (int)length;
 		}
+
 		return hashData;
 	}
 	/// <summary>
@@ -82,7 +94,7 @@ public class PeFile
 	/// </summary>
 	/// <param name="fileImage">ファイルイメージ(オンメモリチェック)</param>
 	/// <returns>署名を持っているかの判定結果。PEファイルではない場合も署名は持っていないと判断するので要注意</returns>
-	public static bool IsSetSignatgure( byte[] fileImage )
+	public static bool IsSetSignature( ReadOnlySpan<byte> fileImage )
 	{
 		if( !IsValidPE( fileImage ) )
 		{
@@ -102,15 +114,15 @@ public class PeFile
 		}
 		// PEファイルアクセスはC形式構造体へのアクセスが頻発するので
 		// IntPtrなバッファにコピーしていろいろ処理する
-		var moduleBuffer = Marshal.AllocHGlobal( fileImage.Length );
-		Marshal.Copy( fileImage, 0, moduleBuffer, fileImage.Length );
-		var imageDosHeader = Marshal.PtrToStructure<IMAGE_DOS_HEADER>( moduleBuffer );
+		//var moduleBuffer = Marshal.AllocHGlobal( fileImage.Length );
+		//Marshal.Copy( fileImage, 0, moduleBuffer, fileImage.Length );
+		var imageDosHeader = MemoryMarshal.Read<IMAGE_DOS_HEADER>( fileImage );
 		// 念のための再チェック(IsValidPEではじいている)
 		Debug.Assert( imageDosHeader.e_magic == Literals.IMAGE_DOS_SIGNATURE );
-		var signature = Marshal.ReadInt32( moduleBuffer, imageDosHeader.e_lfanew );
+		var signature = MemoryMarshal.Read<int>( fileImage.Slice( imageDosHeader.e_lfanew ) );
 		Debug.Assert( signature == Literals.IMAGE_NT_SIGNATURE );
 		int headerOffset = imageDosHeader.e_lfanew + sizeof( uint ); //	シグネチャの後ろを指す
-		var imageFileHeader = Marshal.PtrToStructure<IMAGE_FILE_HEADER>( moduleBuffer + headerOffset );
+		var imageFileHeader = MemoryMarshal.Read<IMAGE_FILE_HEADER>( fileImage.Slice( headerOffset ) );
 
 		headerOffset += Marshal.SizeOf<IMAGE_FILE_HEADER>();
 		if( imageFileHeader.Machine == IMAGE_FILE_MACHINE.I386 )
@@ -127,11 +139,11 @@ public class PeFile
 		}
 		var dataDirectorySize = Marshal.SizeOf<IMAGE_DATA_DIRECTORY>();
 		var signaturePos = dataDirectorySize * (int)IMAGE_DIRECTORY_ENTRY.SECURITY;
-		var dataDirectory = Marshal.PtrToStructure<IMAGE_DATA_DIRECTORY>( moduleBuffer + headerOffset + signaturePos );
+		var dataDirectory = MemoryMarshal.Read<IMAGE_DATA_DIRECTORY>( fileImage.Slice( headerOffset + signaturePos ) );
 		return dataDirectory.VirtualAddress != 0;
 	}
 
-	private static int GetPeSignaturePos( byte[] fileImage )
+	private static int GetPeSignaturePos( ReadOnlySpan<byte> fileImage )
 	{
 		// 少なくともIMAGE_DOS_HEADERサイズは必須
 		int dosHeaderLength = Marshal.SizeOf<IMAGE_DOS_HEADER>();
@@ -154,7 +166,7 @@ public class PeFile
 		}
 		return -1;
 	}
-	private static int ReadInt32( byte[] fileImage, int offset )
+	private static int ReadInt32( ReadOnlySpan<byte> fileImage, int offset )
 	{
 		int data = 0;
 		for( int index = 0 ; index < sizeof( Int32 ) ; index++ )
@@ -165,7 +177,7 @@ public class PeFile
 		}
 		return data;
 	}
-	private static int ReadInt16( byte[] fileImage, int offset )
+	private static int ReadInt16( ReadOnlySpan<byte> fileImage, int offset )
 	{
 		int data = 0;
 		for( int index = 0 ; index < sizeof( Int16 ) ; index++ )
@@ -176,7 +188,7 @@ public class PeFile
 		}
 		return data;
 	}
-	public static void DumpPeHeader( byte[] fileImage )
+	public static void DumpPeHeader( ReadOnlySpan<byte> fileImage )
 	{
 		var dosHeaderSize = Marshal.SizeOf<IMAGE_DOS_HEADER>();
 		// 少なくともヘッダーエリア分がないとダンプは不可能
@@ -185,9 +197,7 @@ public class PeFile
 			Trace.WriteLine( "PEファイルではありません。" );
 			return;
 		}
-		var moduleBuffer = Marshal.AllocHGlobal( fileImage.Length );
-		Marshal.Copy( fileImage, 0, moduleBuffer, fileImage.Length );
-		var imageDosHeader = Marshal.PtrToStructure<IMAGE_DOS_HEADER>( moduleBuffer );
+		var imageDosHeader = MemoryMarshal.Read<IMAGE_DOS_HEADER>( fileImage );
 		if( imageDosHeader.e_magic != Literals.IMAGE_DOS_SIGNATURE )
 		{
 			Trace.WriteLine( "PEファイルではありません。" );
@@ -198,7 +208,7 @@ public class PeFile
 			Trace.WriteLine( "PEファイルではありません。" );
 			return;
 		}
-		var signature = Marshal.ReadInt32( moduleBuffer + imageDosHeader.e_lfanew );
+		var signature = MemoryMarshal.Read<int>( fileImage.Slice( imageDosHeader.e_lfanew ) );
 		if( signature != Literals.IMAGE_NT_SIGNATURE )
 		{
 			Trace.WriteLine( "PEファイルではありません。" );
@@ -206,23 +216,23 @@ public class PeFile
 		}
 		DumpStruture( imageDosHeader );
 
-		Trace.WriteLine( $"Signature={signature:X08}(\"{Encoding.ASCII.GetString( fileImage, imageDosHeader.e_lfanew, 2 )}\")" );
+		Trace.WriteLine( $"Signature={signature:X08}(\"{Encoding.ASCII.GetString( fileImage.Slice( imageDosHeader.e_lfanew, 2 ))}\")" );
 
 		int headerOffset = imageDosHeader.e_lfanew + sizeof( uint );
-		var imageFileHeader = Marshal.PtrToStructure<IMAGE_FILE_HEADER>( moduleBuffer + headerOffset );
+		var imageFileHeader = MemoryMarshal.Read<IMAGE_FILE_HEADER>( fileImage.Slice( headerOffset ) );
 		DumpStruture( headerOffset, imageFileHeader );
 		headerOffset += Marshal.SizeOf<IMAGE_FILE_HEADER>();
 
 		int optionalHeaderSize = 0;
 		if( imageFileHeader.Machine == IMAGE_FILE_MACHINE.I386 )
 		{
-			var optionalHeader32 = Marshal.PtrToStructure<IMAGE_OPTIONAL_HEADER32>( moduleBuffer + headerOffset );
+			var optionalHeader32 = MemoryMarshal.Read<IMAGE_OPTIONAL_HEADER32>( fileImage.Slice( headerOffset ) );
 			DumpStruture( headerOffset, optionalHeader32 );
 			optionalHeaderSize = Marshal.SizeOf<IMAGE_OPTIONAL_HEADER32>();
 		}
 		else if( imageFileHeader.Machine == IMAGE_FILE_MACHINE.AMD64 )
 		{
-			var optionalHeader64 = Marshal.PtrToStructure<IMAGE_OPTIONAL_HEADER64>( moduleBuffer + headerOffset );
+			var optionalHeader64 = MemoryMarshal.Read<IMAGE_OPTIONAL_HEADER64>( fileImage.Slice( headerOffset ) );
 			DumpStruture( headerOffset, optionalHeader64 );
 			optionalHeaderSize = Marshal.SizeOf<IMAGE_OPTIONAL_HEADER64>();
 		}
@@ -233,7 +243,7 @@ public class PeFile
 		for( int index = 0 ; index < Literals.IMAGE_NUMBEROF_DIRECTORY_ENTRIES ; index++ )
 		{
 			IMAGE_DIRECTORY_ENTRY entryName = (IMAGE_DIRECTORY_ENTRY)index;
-			var dataDirectory = Marshal.PtrToStructure<IMAGE_DATA_DIRECTORY>( moduleBuffer + headerOffset + optionalHeaderSize + dataDirectorySize * index );
+			var dataDirectory = MemoryMarshal.Read<IMAGE_DATA_DIRECTORY>( fileImage.Slice( headerOffset + optionalHeaderSize + dataDirectorySize * index ) );
 			Trace.WriteLine( $"IMAGE_DATA_DIRECTORY[{entryName}({index})].VirtualAddress={dataDirectory.VirtualAddress:X08}" );
 			Trace.WriteLine( $"IMAGE_DATA_DIRECTORY[{entryName}({index})].Size={dataDirectory.Size:X08}" );
 		}
@@ -241,7 +251,7 @@ public class PeFile
 		int sectionDataStartPos = headerOffset + imageFileHeader.SizeOfOptionalHeader;
 		for( int index = 0 ; index < imageFileHeader.NumberOfSections ; index++ )
 		{
-			var imageSectionHeader = Marshal.PtrToStructure<IMAGE_SECTION_HEADER>( moduleBuffer + sectionDataStartPos + sectionHeaderSize * index );
+			var imageSectionHeader = MemoryMarshal.Read<IMAGE_SECTION_HEADER>( fileImage.Slice( sectionDataStartPos + sectionHeaderSize * index ) );
 			DumpStruture( sectionDataStartPos + sectionHeaderSize * index, imageSectionHeader );
 		}
 		Trace.WriteLine( $"EndOfHeader={sectionDataStartPos + sectionHeaderSize * imageFileHeader.NumberOfSections:X08}" );

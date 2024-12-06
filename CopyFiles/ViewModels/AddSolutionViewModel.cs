@@ -12,22 +12,19 @@ public partial class AddSolutionViewModel : ObservableValidator
 	[ObservableProperty]
 	bool? dialogResult;
 
-	//[RelayCommand( CanExecute = nameof(IsEnableOK))]
-	[RelayCommand]
-
+	[RelayCommand( CanExecute = nameof( CanExecuteOnOK ) )]
 	void OnOK()
 	{
-		if( string.IsNullOrWhiteSpace( SolutionName ) )
-		{
-			App.DispAlert.Show( "ソリューション名を入力してください", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
-			return;
-		}
 		if( App.ProjectSettingManager.ProjectSettings.Any( setting => setting.Name == SolutionName ) )
 		{
-			App.DispAlert.Show( "ソリューション名が重複しています", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+			App.DispAlert.Show( "ソリューション名が重複しています" );
 			return;
 		}
 		DialogResult = true;
 	}
-	//public bool IsEnableOK => !string.IsNullOrWhiteSpace( SolutionName );
+
+	private bool CanExecuteOnOK()
+	{
+		return !string.IsNullOrWhiteSpace( SolutionName );
+	}
 }

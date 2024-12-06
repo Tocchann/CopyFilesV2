@@ -18,53 +18,51 @@ public static class CompareFileInfo
 		// ベースを最新にするために参照先からコピーしてくるので参照先は絶対にあるはず
 		if( !targetInfo.ReferFileInfo.Exists )
 		{
-			throw new FileNotFoundException( targetInfo.ReferFileInfo.FilePath );
+			throw new FileNotFoundException( $"参照ファイルが見つかりません: {targetInfo.ReferFileInfo.FilePath}" );
 		}
 		// ベースにファイルが有る場合は更新する必要があるかをチェックするのでハッシュ値なども駆使して比較する
 		if( targetInfo.BaseFileInfo.Exists )
 		{
 			// ファイルサイズと日付が同じかどうかは調査対象としない
-			using( var hashAlgorithm = SHA256.Create() )
+			using var hashAlgorithm = SHA256.Create();
+			var baseHash = GetFileHash( hashAlgorithm, targetInfo.BaseFileInfo.FilePath, token );
+			var referHash = GetFileHash( hashAlgorithm, targetInfo.ReferFileInfo.FilePath, token );
+			// 内容的に一致とみなせる場合
+			if( baseHash == referHash )
 			{
-				var baseHash = GetFileHash( hashAlgorithm, targetInfo.BaseFileInfo.FilePath, token );
-				var referHash = GetFileHash( hashAlgorithm, targetInfo.ReferFileInfo.FilePath, token );
-				// 内容的に一致とみなせる場合
-				if( baseHash == referHash )
+				// サイズが一致してハッシュが同じ場合はファイル全体が一致している
+				if( targetInfo.BaseFileInfo.FileSize == targetInfo.ReferFileInfo.FileSize )
 				{
-					// サイズが一致してハッシュが同じ場合はファイル全体が一致している
-					if( targetInfo.BaseFileInfo.FileSize == targetInfo.ReferFileInfo.FileSize )
+					// 日付が同じなら完全一致
+					if( targetInfo.BaseFileInfo.LastWriteTime == targetInfo.ReferFileInfo.LastWriteTime )
 					{
-						// 日付が同じなら完全一致
-						if( targetInfo.BaseFileInfo.LastWriteTime == targetInfo.ReferFileInfo.LastWriteTime )
-						{
-							targetInfo.CompareStatus = CompareStatus.Match;
-						}
-						// 内容は同じで日付が異なる(ビルドしたけど、中身変わらずなパターン)
-						else
-						{
-							targetInfo.CompareStatus = CompareStatus.MatchWithoutDate;
-						}
+						targetInfo.CompareStatus = CompareStatus.Match;
 					}
-					// サイズが違う場合は、署名の有無が異なると判断する(署名があるかは考慮しない)
+					// 内容は同じで日付が異なる(ビルドしたけど、中身変わらずなパターン)
 					else
 					{
-						targetInfo.CompareStatus = CompareStatus.MatchWithoutSignature;
+						targetInfo.CompareStatus = CompareStatus.MatchWithoutDate;
 					}
 				}
-				// 内容が一致していない
+				// サイズが違う場合は、署名の有無が異なると判断する(署名があるかは考慮しない)
 				else
 				{
-					// 内容は違っているがバージョンが同じ == ビルドしたら中身が変わった
-					if( targetInfo.ReferFileInfo.FileVersion != null &&
-						targetInfo.ReferFileInfo.FileVersion == targetInfo.BaseFileInfo.FileVersion )
-					{
-						targetInfo.CompareStatus = CompareStatus.UnMatchSameVersion;
-					}
-					// バージョンがないか一致していないので、普通に異なるファイルという認識でよい
-					else
-					{
-						targetInfo.CompareStatus = CompareStatus.UnMatch;
-					}
+					targetInfo.CompareStatus = CompareStatus.MatchWithoutSignature;
+				}
+			}
+			// 内容が一致していない
+			else
+			{
+				// 内容は違っているがバージョンが同じ == ビルドしたら中身が変わった
+				if( targetInfo.ReferFileInfo.FileVersion != null &&
+					targetInfo.ReferFileInfo.FileVersion == targetInfo.BaseFileInfo.FileVersion )
+				{
+					targetInfo.CompareStatus = CompareStatus.UnMatchSameVersion;
+				}
+				// バージョンがないか一致していないので、普通に異なるファイルという認識でよい
+				else
+				{
+					targetInfo.CompareStatus = CompareStatus.UnMatch;
 				}
 			}
 		}
@@ -85,7 +83,7 @@ public static class CompareFileInfo
 			token.ThrowIfCancellationRequested();
 			if( PeFile.IsValidPE( fileImage ) )
 			{
-				targetInfo.CompareStatus = PeFile.IsSetSignatgure( fileImage ) ? CompareStatus.ExistSignature : CompareStatus.NotExistSignature;
+				targetInfo.CompareStatus = PeFile.IsSetSignature( fileImage ) ? CompareStatus.ExistSignature : CompareStatus.NotExistSignature;
 			}
 			else
 			{

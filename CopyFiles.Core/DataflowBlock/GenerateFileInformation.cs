@@ -11,12 +11,7 @@ public class GenerateFileInformation
 		{
 			if( filePath.StartsWith( setting.BaseFolder ) )
 			{
-				int splitPos = setting.BaseFolder.Length;
-				if( filePath[splitPos] == Path.DirectorySeparatorChar )
-				{
-					splitPos++;
-				}
-				var refPath = filePath.Substring( splitPos );
+				var refPath = Path.GetRelativePath( setting.BaseFolder, filePath );
 				if( isAbsolute )
 				{
 					refPath = Path.Combine( setting.ReferenceFolder, refPath );

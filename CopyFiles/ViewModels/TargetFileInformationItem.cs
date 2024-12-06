@@ -73,19 +73,8 @@ public partial class TargetFileInformationItem : ObservableObject
 		TargetFileInformation = targetInfo;
 		SourceFilePath = targetInfo.ReferFileInfo.FilePath;
 		var referFolder = copySettings.First( info => SourceFilePath.StartsWith( info.ReferenceFolder ) );
-		int refLen = referFolder.ReferenceFolder.Length;
-		if( SourceFilePath[refLen] == Path.DirectorySeparatorChar )
-		{
-			refLen++;
-		}
-		SourceFilePath = SourceFilePath.Substring( refLen );
-		DestinationFilePath = targetInfo.BaseFileInfo.FilePath;
-		int baseLen = referFolder.BaseFolder.Length;
-		if( DestinationFilePath[baseLen] == Path.DirectorySeparatorChar )
-		{
-			baseLen++;
-		}
-		DestinationFilePath = DestinationFilePath.Substring( baseLen );
+		SourceFilePath = Path.GetRelativePath( referFolder.ReferenceFolder, SourceFilePath );
+		DestinationFilePath = Path.GetRelativePath( referFolder.BaseFolder, targetInfo.BaseFileInfo.FilePath );
 		SourceFileVersion = string.Empty;
 		SourceLastWriteTime = string.Empty;
 		DestinationFileVersion = string.Empty;
@@ -97,13 +86,7 @@ public partial class TargetFileInformationItem : ObservableObject
 	public TargetFileInformationItem( ReferFolder setting, TargetFileInformation targetInfo, OnIsCheckedChanged onIsCheckedChanged )
 	{
 		TargetFileInformation = targetInfo;
-		SourceFilePath = targetInfo.BaseFileInfo.FilePath;
-		int len = setting.BaseFolder.Length;
-		if( SourceFilePath[len] == Path.DirectorySeparatorChar )
-		{
-			len++;
-		}
-		SourceFilePath = SourceFilePath.Substring( len );
+		SourceFilePath = Path.GetRelativePath( setting.BaseFolder, targetInfo.BaseFileInfo.FilePath );
 		DestinationFilePath = targetInfo.ReferFileInfo.FilePath;
 		SourceFileVersion = string.Empty;
 		SourceLastWriteTime = string.Empty;

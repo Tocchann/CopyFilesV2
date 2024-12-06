@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CopyFiles.Core.Tasks;
 
@@ -31,7 +32,7 @@ public static class ListFilesTask
 		{
 			CancellationToken = token,
 			EnsureOrdered = false,
-			MaxDegreeOfParallelism = -1,    //	制限なしでよいと思うのよ
+			MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,    //	制限なしでよいと思うのよ
 		};
 		var singleBlockOptions = new ExecutionDataflowBlockOptions
 		{
@@ -78,19 +79,39 @@ public static class ListFilesTask
 	/// <param name="progress">インジケータオブジェクト</param>
 	/// <param name="token">キャンセルトークン</param>
 	/// <returns>列挙したファイル情報リスト</returns>
-	public static async Task<IEnumerable<TargetFileInformation>> ListCopyFilesAsync( ProjectSetting setting, IEnumerable<string> baseFiles, IProgress<int> progress, CancellationToken token )
+	public static async Task<IEnumerable<TargetFileInformation>> ListCopyFilesAsync(
+		ProjectSetting setting, IEnumerable<string> baseFiles, IProgress<int> progress, CancellationToken token )
+	{
+		if( setting.CopySettings == null )
+		{
+			return Array.Empty<TargetFileInformation>();
+		}
+		return await ListFilesAsync( setting.CopySettings, true,CompareFileInfo.CompareCopy, baseFiles, progress, token );
+	}
+
+
+	public static async Task<IEnumerable<TargetFileInformation>> ListNotSignedFilesAsync(
+		ProjectSetting setting, IEnumerable<string> baseFiles, IProgress<int> progress, CancellationToken token )
 	{
 		var targetFiles = new List<TargetFileInformation>();
-		if( setting.CopySettings == null )
+		if( setting.SignerFileSetting == null )
 		{
 			return targetFiles;
 		}
+		return await ListFilesAsync( [setting.SignerFileSetting], false, CompareFileInfo.CheckSignature, baseFiles, progress, token );
+	}
+	private static async Task<IEnumerable<TargetFileInformation>> ListFilesAsync(
+		IEnumerable<ReferFolder> referFolders, bool isCopyMode,
+		Func<TargetFileInformation, CancellationToken, TargetFileInformation> compareFunc,
+		IEnumerable<string> baseFiles, IProgress<int> progress, CancellationToken token )
+	{
+		var targetFiles = new List<TargetFileInformation>();
 
 		var blockOptions = new ExecutionDataflowBlockOptions
 		{
 			CancellationToken = token,
 			EnsureOrdered = false,
-			MaxDegreeOfParallelism = -1,    //	制限なしでよいと思うのよ
+			MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
 		};
 		var singleBlockOptions = new ExecutionDataflowBlockOptions
 		{
@@ -103,62 +124,10 @@ public static class ListFilesTask
 			PropagateCompletion = true,
 		};
 		var generateFilesBlock = new TransformBlock<string, TargetFileInformation>(
-			filePath => GenerateFileInformation.Generate( setting.CopySettings, filePath, true ), blockOptions );
+			filePath => GenerateFileInformation.Generate( referFolders, filePath, isCopyMode ), blockOptions );
 
 		var compareFilesBlock = new TransformBlock<TargetFileInformation, TargetFileInformation>(
-			targetInfo => CompareFileInfo.CompareCopy( targetInfo, token ), blockOptions );
-
-		int progressCount = 0;
-		var addTargetFilesBlock = new ActionBlock<TargetFileInformation>(
-			targetInfo =>
-			{
-				progress.Report( progressCount );
-				progressCount++;
-				targetFiles.Add( targetInfo );
-			}, singleBlockOptions );
-
-		generateFilesBlock.LinkTo( compareFilesBlock, linkOptions );
-		compareFilesBlock.LinkTo( addTargetFilesBlock, linkOptions );
-
-		foreach( var projectFile in baseFiles )
-		{
-			await generateFilesBlock.SendAsync( projectFile, token );
-		}
-		generateFilesBlock.Complete();
-		await addTargetFilesBlock.Completion;
-
-		return targetFiles;
-	}
-
-
-	public static async Task<IEnumerable<TargetFileInformation>> ListNotSignedFilesAsync( ProjectSetting setting, IEnumerable<string> baseFiles, IProgress<int> progress, CancellationToken token )
-	{
-		var targetFiles = new List<TargetFileInformation>();
-		if( setting.SignerFileSetting == null )
-		{
-			return targetFiles;
-		}
-		var blockOptions = new ExecutionDataflowBlockOptions
-		{
-			CancellationToken = token,
-			EnsureOrdered = false,
-			MaxDegreeOfParallelism = -1,    //	制限なしでよいと思うのよ
-		};
-		var singleBlockOptions = new ExecutionDataflowBlockOptions
-		{
-			CancellationToken = token,
-			EnsureOrdered = false,
-			MaxDegreeOfParallelism = 1, //	直列で処理する
-		};
-		var linkOptions = new DataflowLinkOptions
-		{
-			PropagateCompletion = true,
-		};
-		var generateFilesBlock = new TransformBlock<string, TargetFileInformation>(
-			filePath => GenerateFileInformation.Generate( [setting.SignerFileSetting], filePath, false ), blockOptions );
-
-		var compareFilesBlock = new TransformBlock<TargetFileInformation, TargetFileInformation>(
-			targetInfo => CompareFileInfo.CheckSignature( targetInfo, token ), blockOptions );
+			targetInfo => compareFunc( targetInfo, token ), blockOptions );
 
 		int progressCount = 0;
 		var addTargetFilesBlock = new ActionBlock<TargetFileInformation>(

@@ -72,12 +72,12 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 	{
 		if( string.IsNullOrWhiteSpace( BaseFolder ) )
 		{
-			App.DispAlert.Show( "基準フォルダが指定されていません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+			App.DispAlert.Show( "基準フォルダが指定されていません。" );
 			return;
 		}
 		if( string.IsNullOrWhiteSpace( ReferenceFolder ) )
 		{
-			App.DispAlert.Show( "参照フォルダが指定されていません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+			App.DispAlert.Show( "参照フォルダが指定されていません。" );
 			return;
 		}
 		// コピーの場合は、
@@ -85,7 +85,7 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 		{
 			if( !Directory.Exists( ReferenceFolder ) )
 			{
-				App.DispAlert.Show( "参照フォルダが存在しません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+				App.DispAlert.Show( "参照フォルダが存在しません。" );
 				return;
 			}
 		}
@@ -93,7 +93,7 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 		{
 			if( !Directory.Exists( BaseFolder ) )
 			{
-				App.DispAlert.Show( "基準フォルダが存在しません。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+				App.DispAlert.Show( "基準フォルダが存在しません。" );
 				return;
 			}
 		}
@@ -103,7 +103,7 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 			// 参照フォルダ(コピー元)が同じで別の場所にコピーはない(逆はある)
 			if( App.ProjectSettingManager.CurrentSetting.CopySettings.Any( r => r.ReferenceFolder == ReferenceFolder && r.BaseFolder != BaseFolder ) )
 			{
-				App.DispAlert.Show( "参照フォルダが重複しています。", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+				App.DispAlert.Show( "参照フォルダが重複しています。" );
 				return;
 			}
 		}

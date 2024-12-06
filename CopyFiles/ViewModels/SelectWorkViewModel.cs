@@ -54,7 +54,7 @@ public partial class SelectWorkViewModel : ObservableObject
 	{
 		if( string.IsNullOrEmpty( SelectProjectSettingName ) )
 		{
-			App.DispAlert.Show( "プロジェクトが選択されていません", IDispAlert.Buttons.OK, IDispAlert.Icon.Exclamation );
+			App.DispAlert.Show( "プロジェクトが選択されていません" );
 			return;
 		}
 		var result = App.DispAlert.Show( SelectProjectSettingName + "を削除しますか？", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question );
