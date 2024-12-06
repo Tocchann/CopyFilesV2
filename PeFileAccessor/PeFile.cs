@@ -60,31 +60,34 @@ public class PeFile
 		int sectionDataStartPos = headerOffset + Marshal.SizeOf<IMAGE_FILE_HEADER>() + imageFileHeader.SizeOfOptionalHeader;
 		int sectionHeaderSize = Marshal.SizeOf<IMAGE_SECTION_HEADER>();
 		uint totalSize = 0;
-		List<(uint top, uint length)> copyPositions = new();
+		(uint top, uint length)[] copyPositions = new (uint top, uint length)[imageFileHeader.NumberOfSections];
 
 		for( int index = 0 ; index < imageFileHeader.NumberOfSections ; index++ )
 		{
 			int sectionHeaderOffset = sectionDataStartPos + sectionHeaderSize * index;
-			var imageSectionHeader = MemoryMarshal.Read<IMAGE_SECTION_HEADER>( fileImage.Slice( sectionHeaderOffset ) );
+			var slice = fileImage.Slice( sectionHeaderOffset );
+			var imageSectionHeader = MemoryMarshal.Read<IMAGE_SECTION_HEADER>( slice );
 
 			uint sectionStartPos = imageSectionHeader.PointerToRawData;
 			uint sectionSize = imageSectionHeader.SizeOfRawData;
 
 			// 範囲チェック
-			if( sectionStartPos + sectionSize <= fileImage.Length )
+			if( sectionStartPos + sectionSize > fileImage.Length )
 			{
-				copyPositions.Add( (sectionStartPos, sectionSize) );
-				totalSize += sectionSize;
+				throw new ArgumentOutOfRangeException( $"セクションデータがファイルサイズを超えています。index={index}" );
 			}
+			copyPositions[index].top = sectionStartPos;
+			copyPositions[index].length = sectionSize;
+			totalSize += sectionSize;
 		}
 
 		var hashData = new byte[totalSize];
-		int destPosition = 0;
+		int dstPosition = 0;
 
 		foreach( var (top, length) in copyPositions )
 		{
-			fileImage.Slice( (int)top, (int)length ).CopyTo( hashData.AsSpan( destPosition ) );
-			destPosition += (int)length;
+			fileImage.Slice( (int)top, (int)length ).CopyTo( hashData.AsSpan( dstPosition ) );
+			dstPosition += (int)length;
 		}
 
 		return hashData;
@@ -166,28 +169,29 @@ public class PeFile
 		}
 		return -1;
 	}
-	private static int ReadInt32( ReadOnlySpan<byte> fileImage, int offset )
-	{
-		int data = 0;
-		for( int index = 0 ; index < sizeof( Int32 ) ; index++ )
-		{
-			int newData = fileImage[offset + index];
-			newData <<= 8 * index;
-			data |= newData;
-		}
-		return data;
-	}
-	private static int ReadInt16( ReadOnlySpan<byte> fileImage, int offset )
-	{
-		int data = 0;
-		for( int index = 0 ; index < sizeof( Int16 ) ; index++ )
-		{
-			int newData = fileImage[offset + index];
-			newData <<= 8 * index;
-			data |= newData;
-		}
-		return data;
-	}
+	private static int ReadInt32( ReadOnlySpan<byte> fileImage, int offset ) => MemoryMarshal.Read<int>( fileImage.Slice( offset ) );
+	//{
+	//	int data = 0;
+	//	for( int index = 0 ; index < sizeof( Int32 ) ; index++ )
+	//	{
+	//		int newData = fileImage[offset + index];
+	//		newData <<= 8 * index;
+	//		data |= newData;
+	//	}
+	//	return data;
+	//}
+	private static int ReadInt16( ReadOnlySpan<byte> fileImage, int offset ) => MemoryMarshal.Read<short>( fileImage.Slice( offset ) );
+	//{
+	//	int data = 0;
+	//	for( int index = 0 ; index < sizeof( Int16 ) ; index++ )
+	//	{
+	//		int newData = fileImage[offset + index];
+	//		newData <<= 8 * index;
+	//		data |= newData;
+	//	}
+	//	return data;
+	//}
+#if DEBUG
 	public static void DumpPeHeader( ReadOnlySpan<byte> fileImage )
 	{
 		var dosHeaderSize = Marshal.SizeOf<IMAGE_DOS_HEADER>();
@@ -214,7 +218,7 @@ public class PeFile
 			Trace.WriteLine( "PEファイルではありません。" );
 			return;
 		}
-		DumpStruture( imageDosHeader );
+		DumpStructure( imageDosHeader );
 
 		Trace.WriteLine( $"Signature={signature:X08}(\"{Encoding.ASCII.GetString( fileImage.Slice( imageDosHeader.e_lfanew, 2 ))}\")" );
 
@@ -257,7 +261,7 @@ public class PeFile
 		Trace.WriteLine( $"EndOfHeader={sectionDataStartPos + sectionHeaderSize * imageFileHeader.NumberOfSections:X08}" );
 	}
 
-	private static void DumpStruture( IMAGE_DOS_HEADER structure )
+	private static void DumpStructure( IMAGE_DOS_HEADER structure )
 	{
 		Trace.WriteLine( $"sizeof(IMAGE_DOS_HEADER)={Marshal.SizeOf<IMAGE_DOS_HEADER>()}" );
 		Trace.WriteLine( $"IMAGE_DOS_HEADER.e_magic={structure.e_magic:X04}" );
@@ -379,7 +383,17 @@ public class PeFile
 	private static void DumpStruture( int headerOffset, IMAGE_SECTION_HEADER structure )
 	{
 		Trace.WriteLine( $"Offset:{headerOffset:X08}(sizeof(IMAGE_SECTION_HEADER)={Marshal.SizeOf<IMAGE_SECTION_HEADER>()}" );
-		Trace.WriteLine( $"IMAGE_SECTION_HEADER.Name={structure.Name.ToString()}" );
+		byte[] nameBytes = new byte[8];
+		nameBytes[0] = structure.Name_0;
+		nameBytes[1] = structure.Name_1;
+		nameBytes[2] = structure.Name_2;
+		nameBytes[3] = structure.Name_3;
+		nameBytes[4] = structure.Name_4;
+		nameBytes[5] = structure.Name_5;
+		nameBytes[6] = structure.Name_6;
+		nameBytes[7] = structure.Name_7;
+		Trace.WriteLine( $"IMAGE_SECTION_HEADER.Name={Encoding.ASCII.GetString( nameBytes )}" );
+		//Trace.WriteLine( $"IMAGE_SECTION_HEADER.Name={structure.Name.ToString()}" );
 		Trace.WriteLine( $"IMAGE_SECTION_HEADER.VirtualSize={structure.VirtualSize:X08}" );
 		Trace.WriteLine( $"IMAGE_SECTION_HEADER.VirtualAddress={structure.VirtualAddress:X08}" );
 		Trace.WriteLine( $"IMAGE_SECTION_HEADER.SizeOfRawData={structure.SizeOfRawData:X08}" );
@@ -391,4 +405,5 @@ public class PeFile
 		uint uintValue = (uint)structure.Characteristics;
 		Trace.WriteLine( $"IMAGE_SECTION_HEADER.Characteristics={structure.Characteristics}({uintValue:X08})" );
 	}
+#endif
 }

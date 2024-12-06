@@ -126,12 +126,21 @@ public struct IMAGE_DATA_DIRECTORY
 	public uint VirtualAddress;
 	public uint Size;
 }
-
-[StructLayout( LayoutKind.Sequential, CharSet = CharSet.Ansi )]
+//MemoryMarshal.Read<IMAGE_SECTION_HEADER>( slice ); で読むためには、変換を伴う処理があってはダメだった…(ダイレクトに表現されてないとダメらしい)
+//[StructLayout( LayoutKind.Sequential, CharSet = CharSet.Ansi )]
+[StructLayout( LayoutKind.Sequential)]
 public struct IMAGE_SECTION_HEADER
 {
-	[MarshalAs( UnmanagedType.ByValTStr, SizeConst = 8 )]
-	public string Name;
+	//[MarshalAs( UnmanagedType.ByValTStr, SizeConst = 8 )]
+	//public string Name;
+	public byte Name_0;
+	public byte Name_1;
+	public byte Name_2;
+	public byte Name_3;
+	public byte Name_4;
+	public byte Name_5;
+	public byte Name_6;
+	public byte Name_7;
 	public uint VirtualSize;
 	public uint VirtualAddress;
 	public uint SizeOfRawData;
