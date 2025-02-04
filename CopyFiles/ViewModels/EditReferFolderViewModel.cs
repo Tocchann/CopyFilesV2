@@ -97,16 +97,16 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 				return;
 			}
 		}
-		// コピーの場合コピー元(参照フォルダ)が同じ場所になることはない
-		if( IsCopySetting )
-		{
-			// 参照フォルダ(コピー元)が同じで別の場所にコピーはない(逆はある)
-			if( App.ProjectSettingManager.CurrentSetting.CopySettings.Any( r => r.ReferenceFolder == ReferenceFolder && r.BaseFolder != BaseFolder ) )
-			{
-				App.DispAlert.Show( "参照フォルダが重複しています。" );
-				return;
-			}
-		}
+		//// コピーの場合コピー元(参照フォルダ)が同じ場所になることはない
+		//if( IsCopySetting )
+		//{
+		//	// 参照フォルダ(コピー元)が同じで別の場所にコピーはない(逆はある)
+		//	if( App.ProjectSettingManager.CurrentSetting.CopySettings.Any( r => r.ReferenceFolder == ReferenceFolder && r.BaseFolder != BaseFolder ) )
+		//	{
+		//		App.DispAlert.Show( "参照フォルダが重複しています。" );
+		//		return;
+		//	}
+		//}
 		DialogResult = true;
 	}
 }

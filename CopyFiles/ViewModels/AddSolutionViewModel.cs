@@ -7,6 +7,7 @@ namespace CopyFiles.ViewModels;
 public partial class AddSolutionViewModel : ObservableValidator
 {
 	[ObservableProperty]
+	[NotifyCanExecuteChangedFor( nameof( OKCommand ) )]
 	string? solutionName;
 
 	[ObservableProperty]

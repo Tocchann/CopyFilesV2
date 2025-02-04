@@ -27,7 +27,7 @@ public class FileInformation
 		FileVersion = GetFileVersion( FilePath );
 		if( Exists )
 		{
-			LastWriteTime = info.LastWriteTimeUtc;
+			LastWriteTime = info.LastWriteTime;
 			FileSize = info.Length;
 		}
 	}
