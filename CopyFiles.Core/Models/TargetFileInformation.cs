@@ -24,21 +24,29 @@ public class FileInformation
 	{
 		var info = new FileInfo( FilePath );
 		Exists = info.Exists;
-		FileVersion = GetFileVersion( FilePath );
 		if( Exists )
 		{
+			FileVersion = GetFileVersion( FilePath );
 			LastWriteTime = info.LastWriteTime;
 			FileSize = info.Length;
 		}
 	}
 	private static Version? GetFileVersion( string filePath )
 	{
-		var verInfo = FileVersionInfo.GetVersionInfo( filePath );
-		if( !string.IsNullOrEmpty( verInfo.FileVersion ) )
+		try
 		{
-			return new Version( verInfo.FileMajorPart, verInfo.FileMinorPart, verInfo.FileBuildPart, verInfo.FilePrivatePart );
+			var verInfo = FileVersionInfo.GetVersionInfo( filePath );
+			if( !string.IsNullOrEmpty( verInfo.FileVersion ) )
+			{
+				return new Version( verInfo.FileMajorPart, verInfo.FileMinorPart, verInfo.FileBuildPart, verInfo.FilePrivatePart );
+			}
+			return null;
 		}
-		return null;
+		catch( Exception ex )
+		{
+			Debug.WriteLine( $"GetFileVersion:{filePath}\n{ex.Message}" );
+			throw;
+		}
 	}
 }
 public class TargetFileInformation
