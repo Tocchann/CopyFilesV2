@@ -53,14 +53,6 @@
         <DataGridTextColumn Header="コピー先" Binding="{Binding BaseFolder}" IsReadOnly="True" />
       </DataGrid.Columns>
     </DataGrid>
-    <!--<ListView Grid.Row="4" d:ItemsSource="{d:SampleData ItemCount=2}" ItemsSource="{Binding ReferFolders}" SelectedItem="{Binding SelectedReferFolder}">
-      <ListView.View>
-        <GridView>
-          <GridViewColumn Header="コピー元" DisplayMemberBinding="{Binding ReferenceFolder}" />
-          <GridViewColumn Header="コピー先" DisplayMemberBinding="{Binding BaseFolder}" />
-        </GridView>
-      </ListView.View>
-    </ListView>-->
     <Grid Grid.Row="6">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*" />
