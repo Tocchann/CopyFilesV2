@@ -102,14 +102,14 @@ public partial class SelectWorkViewModel : ObservableObject
 			//System.IO.Compression.ZipFile.ExtractToDirectory( dlg.FileName, App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder );
 			using( var archive = System.IO.Compression.ZipFile.OpenRead( dlg.FileName ) )
 			{
-				System.IO.Compression.ZipArchiveEntry firstEntry = archive.Entries.First();
+				System.IO.Compression.ZipArchiveEntry firstEntry = archive.Entries.First(entry => entry.Length > 0);
 				var filePath = Path.Combine( App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder, firstEntry.FullName );
 				if( File.Exists( filePath ) )
 				{
 					// この場所であっているのでそのまま展開する
 					if( App.DispAlert.Show( "圧縮ファイルの内容で更新しますか？", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question ) == IDispAlert.Result.Yes )
 					{
-						foreach( var entry in archive.Entries )
+						foreach( var entry in archive.Entries.Where( e => e.Length > 0 ) )
 						{
 							filePath = Path.Combine( App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder, entry.FullName );
 							entry.ExtractToFile( filePath, true );
