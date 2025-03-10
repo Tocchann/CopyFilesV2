@@ -65,4 +65,9 @@ public partial class App : Application
 	{
 		await host_.StopAsync();
 	}
+
+	private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+	{
+		DispAlert.Show(e.Exception.ToString());
+	}
 }
