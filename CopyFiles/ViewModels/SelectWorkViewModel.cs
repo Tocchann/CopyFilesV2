@@ -117,10 +117,6 @@ public partial class SelectWorkViewModel : ObservableObject
 						}
 						firstTime = false;
 					}
-					else
-					{
-						continue;
-					}
 					File.Copy( file, dstPath, true );
 				}
 				else
