@@ -94,39 +94,81 @@ public partial class SelectWorkViewModel : ObservableObject
 			App.DispAlert.Show( "先に、未署名ファイルの圧縮で、基準フォルダを設定してください" );
 			return;
 		}
-		var dlg = new Microsoft.Win32.OpenFileDialog();
-		dlg.Filter = "Zipファイル(*.zip)|*.zip";
-		if( dlg.ShowDialog( Extensions.UI.WPF.Utilities.GetOwnerWindow() ) == true )
+		var dlg = App.GetService<ISelectFolderDialog>();
+		dlg.Title = "binフォルダにあたる署名済みファイルのフォルダを選択してください。";
+		if( dlg.ShowDialog() == true )
 		{
-			// フォルダを調整しないと展開できない場合もあるから、ここは手動でやらないとダメ…だろうな。
-			//System.IO.Compression.ZipFile.ExtractToDirectory( dlg.FileName, App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder );
-			using( var archive = System.IO.Compression.ZipFile.OpenRead( dlg.FileName ) )
+			var baseFolder = dlg.SelectedPath!;
+			// ここのフォルダからの相対パスが App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder と一致する場合だけコピーする
+			var files = Directory.EnumerateFiles( baseFolder, "*.*", SearchOption.AllDirectories );
+			bool firstTime = true;
+			foreach( var file in files )
 			{
-				System.IO.Compression.ZipArchiveEntry firstEntry = archive.Entries.First(entry => entry.Length > 0);
-				var filePath = Path.Combine( App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder, firstEntry.FullName );
-				if( File.Exists( filePath ) )
+				var relPath = Path.GetRelativePath( baseFolder, file );
+				var dstPath = Path.Combine( App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder, relPath );
+				if( File.Exists( dstPath ) )
 				{
-					// この場所であっているのでそのまま展開する
-					if( App.DispAlert.Show( "圧縮ファイルの内容で更新しますか？", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question ) == IDispAlert.Result.Yes )
+					if( firstTime )
 					{
-						foreach( var entry in archive.Entries.Where( e => e.Length > 0 ) )
+						// コピー先のフォルダが間違っている場合はコピーせずに停止する(改めて指定させる)
+						if( App.DispAlert.Show( "ファイルをコピーします。よろしいですか？", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question ) != IDispAlert.Result.Yes )
 						{
-							filePath = Path.Combine( App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder, entry.FullName );
-							entry.ExtractToFile( filePath, true );
+							break;
 						}
+						firstTime = false;
 					}
+					else
+					{
+						continue;
+					}
+					File.Copy( file, dstPath, true );
 				}
 				else
 				{
-					// この場所でないので、展開して手動でコピーしてもらう
-					if( App.DispAlert.Show( "圧縮ファイルを直接展開できないので、サブフォルダに展開します。", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question ) == IDispAlert.Result.Yes )
-					{
-						var extractDir = Path.Combine( Path.GetDirectoryName( dlg.FileName )!, Path.GetFileNameWithoutExtension( dlg.FileName ) );
-						archive.ExtractToDirectory( extractDir );
-					}
+					// 指定したフォルダが間違っている場合はコピーせずに停止する(改めて指定させる)
+					App.DispAlert.Show( "指定したフォルダが間違っています。" );
+					break;
 				}
 			}
+			if( !firstTime )
+			{
+				App.DispAlert.Show( "コピーが完了しました。" );
+			}
 		}
+
+		//var dlg = new Microsoft.Win32.OpenFileDialog();
+		//dlg.Filter = "Zipファイル(*.zip)|*.zip";
+		//if( dlg.ShowDialog( Extensions.UI.WPF.Utilities.GetOwnerWindow() ) == true )
+		//{
+		//	// フォルダを調整しないと展開できない場合もあるから、ここは手動でやらないとダメ…だろうな。
+		//	//System.IO.Compression.ZipFile.ExtractToDirectory( dlg.FileName, App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder );
+		//	using( var archive = System.IO.Compression.ZipFile.OpenRead( dlg.FileName ) )
+		//	{
+		//		System.IO.Compression.ZipArchiveEntry firstEntry = archive.Entries.First(entry => entry.Length > 0);
+		//		var filePath = Path.Combine( App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder, firstEntry.FullName );
+		//		if( File.Exists( filePath ) )
+		//		{
+		//			// この場所であっているのでそのまま展開する
+		//			if( App.DispAlert.Show( "圧縮ファイルの内容で更新しますか？", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question ) == IDispAlert.Result.Yes )
+		//			{
+		//				foreach( var entry in archive.Entries.Where( e => e.Length > 0 ) )
+		//				{
+		//					filePath = Path.Combine( App.ProjectSettingManager.CurrentSetting.SignerFileSetting.BaseFolder, entry.FullName );
+		//					entry.ExtractToFile( filePath, true );
+		//				}
+		//			}
+		//		}
+		//		else
+		//		{
+		//			// この場所でないので、展開して手動でコピーしてもらう
+		//			if( App.DispAlert.Show( "圧縮ファイルを直接展開できないので、サブフォルダに展開します。", IDispAlert.Buttons.YesNo, IDispAlert.Icon.Question ) == IDispAlert.Result.Yes )
+		//			{
+		//				var extractDir = Path.Combine( Path.GetDirectoryName( dlg.FileName )!, Path.GetFileNameWithoutExtension( dlg.FileName ) );
+		//				archive.ExtractToDirectory( extractDir );
+		//			}
+		//		}
+		//	}
+		//}
 	}
 
 	public SelectWorkViewModel()
