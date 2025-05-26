@@ -3,8 +3,10 @@ using CommunityToolkit.Mvvm.Input;
 using CopyFiles.Contract.Views;
 using CopyFiles.Core.Tasks;
 using CopyFiles.Extensions.UI.Abstractions;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Security.Policy;
 using System.Threading.Tasks.Dataflow;
 
 namespace CopyFiles.ViewModels;
@@ -147,6 +149,13 @@ public partial class ArchiveNonSignedFilesViewModel : MainWorkBaseViewModel
 				actionBlock.Complete();
 				await actionBlock.Completion;
 			}
+			// エクスプローラを開いて、ファイルを選択状態にしておく
+			var startInfo = new ProcessStartInfo
+			{
+				FileName = Path.GetDirectoryName( filePath ),
+				UseShellExecute = true,
+			};
+			Process.Start( startInfo );
 		}
 		catch( OperationCanceledException )
 		{
