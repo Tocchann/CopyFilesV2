@@ -32,7 +32,7 @@ public static class ListFilesTask
 		{
 			CancellationToken = token,
 			EnsureOrdered = false,
-			MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,    //	制限なしでよいと思うのよ
+			MaxDegreeOfParallelism = Debugger.IsAttached ? 1 : DataflowBlockOptions.Unbounded, // デバッガ接続時はステップ実行できるようにシングルタスクで動かす
 		};
 		var singleBlockOptions = new ExecutionDataflowBlockOptions
 		{
@@ -50,7 +50,7 @@ public static class ListFilesTask
 
 		// 同じファイルが複数含まれないように列挙しないとダメ
 		Func<string, bool> filterAddFile = 
-			copyMode ? file => setting.CopySettings.Any( s => file.StartsWith( s.BaseFolder ) )
+			copyMode ? file => setting.CopySettings.Any( s => file.StartsWith( s.BaseFolder ) || file.StartsWith( s.ReferenceFolder ) )
 					 : file => file.StartsWith( setting.SignerFileSetting.BaseFolder );
 		var addBaseFilesBlock = new ActionBlock<string>( file =>
 		{
@@ -98,6 +98,7 @@ public static class ListFilesTask
 		{
 			return targetFiles;
 		}
+		// SignerFileSettingはコレクションクラスではないので、コレクション式を使って IEnumerable<ReferFolder> に渡せるようにする
 		return await ListFilesAsync( [setting.SignerFileSetting], false, CompareFileInfo.CheckSignature, baseFiles, progress, token );
 	}
 	private static async Task<IEnumerable<TargetFileInformation>> ListFilesAsync(
@@ -111,7 +112,7 @@ public static class ListFilesTask
 		{
 			CancellationToken = token,
 			EnsureOrdered = false,
-			MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+			MaxDegreeOfParallelism = Debugger.IsAttached ? 1 : DataflowBlockOptions.Unbounded, // デバッガ接続時はステップ実行できるようにシングルタスクで動かす
 		};
 		var singleBlockOptions = new ExecutionDataflowBlockOptions
 		{
