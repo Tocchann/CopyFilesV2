@@ -69,5 +69,6 @@ public partial class App : Application
 	private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
 	{
 		DispAlert.Show(e.Exception.ToString());
+		e.Handled = true; // 例外を処理済みにする終了させない
 	}
 }
