@@ -14,10 +14,10 @@ namespace CopyFiles.ViewModels;
 public partial class ArchiveNonSignedFilesViewModel : MainWorkBaseViewModel
 {
 	[ObservableProperty]
-	ReferFolderItem referFolderItem;
+	public partial ReferFolderItem ReferFolderItem { get; set; }
 
 	[ObservableProperty]
-	string zipFileNamePrefix;
+	public partial string ZipFileNamePrefix { get; set; }
 
 	partial void OnZipFileNamePrefixChanged( string value )
 	{

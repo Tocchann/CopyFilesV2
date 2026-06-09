@@ -9,10 +9,10 @@ namespace CopyFiles.ViewModels;
 public partial class ReferFolderItem : ObservableObject
 {
 	[ObservableProperty]
-	string baseFolder;
+	public partial string BaseFolder { get; set; }
 
 	[ObservableProperty]
-	string referenceFolder;
+	public partial string ReferenceFolder { get; set; }
 
 	public ReferFolder ReferFolder
 	{
@@ -40,10 +40,10 @@ public partial class EditReferFolderViewModel : ReferFolderItem
 {
 	public bool IsCopySetting { get; set; }
 	[ObservableProperty]
-	string dialogTitle = string.Empty;
+	public partial string DialogTitle { get; set; } = string.Empty;
 
 	[ObservableProperty]
-	bool? dialogResult;
+	public partial bool? DialogResult { get; set; }
 
 	[RelayCommand]
 	void ChangeBaseFolder()

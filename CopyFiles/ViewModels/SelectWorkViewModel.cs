@@ -13,7 +13,7 @@ public partial class SelectWorkViewModel : ObservableObject
 	public ObservableCollection<string> ProjectSettingNames { get; } = new();
 
 	[ObservableProperty]
-	string? selectProjectSettingName;
+	public partial string? SelectProjectSettingName { get; set; }
 
 	partial void OnSelectProjectSettingNameChanged( string? value )
 	{
@@ -23,7 +23,7 @@ public partial class SelectWorkViewModel : ObservableObject
 		IsSelectedProject = string.IsNullOrEmpty( value ) == false;
 	}
 	[ObservableProperty]
-	bool isSelectedProject;
+	public partial bool IsSelectedProject { get; set; }
 
 	[RelayCommand]
 	void AddSolution()
@@ -122,7 +122,7 @@ public partial class SelectWorkViewModel : ObservableObject
 				else
 				{
 					// 指定したフォルダが間違っている場合はコピーせずに停止する(改めて指定させる)
-					App.DispAlert.Show( "指定したフォルダが間違っています。" );
+					App.DispAlert.Show( $"指定したフォルダが間違っています。\nSrcPath={relPath}\nDstPath={dstPath}" );
 					break;
 				}
 			}
