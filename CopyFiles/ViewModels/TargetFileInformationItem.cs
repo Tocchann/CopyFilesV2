@@ -10,7 +10,7 @@ namespace CopyFiles.ViewModels;
 public partial class TargetFileInformationItem : ObservableObject
 {
 	[ObservableProperty]
-	bool isCopy;
+	public partial bool IsCopy { get; set; }
 
 	partial void OnIsCopyChanged( bool value )
 	{
@@ -18,28 +18,28 @@ public partial class TargetFileInformationItem : ObservableObject
 		m_onIsCheckedChanged?.Invoke();
 	}
 	[ObservableProperty]
-	bool isSelected;
+	public partial bool IsSelected { get; set; }
 
 	[ObservableProperty]
-	CompareStatus status;
+	public partial CompareStatus Status { get; set; }
 
 	[ObservableProperty]
-	string sourceFilePath;
+	public partial string SourceFilePath { get; set; }
 
 	[ObservableProperty]
-	string sourceFileVersion;
+	public partial string SourceFileVersion { get; set; }
 
 	[ObservableProperty]
-	string sourceLastWriteTime;
+	public partial string SourceLastWriteTime { get; set; }
 
 	[ObservableProperty]
-	string destinationFilePath;
+	public partial string DestinationFilePath { get; set; }
 
 	[ObservableProperty]
-	string destinationFileVersion;
+	public partial string DestinationFileVersion { get; set; }
 
 	[ObservableProperty]
-	string destinationLastWriteTime;
+	public partial string DestinationLastWriteTime { get; set; }
 
 	public void UpdateStatus( bool updateAllData, bool copyMode )
 	{

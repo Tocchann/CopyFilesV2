@@ -16,32 +16,32 @@ public abstract partial class MainWorkBaseViewModel : ObservableObject
 
 	[ObservableProperty]
 	[NotifyPropertyChangedFor( nameof( IsSelectedProjectFile ) )]
-	string? selectedProjectFile;
+	public partial string? SelectedProjectFile { get; set; }
 	public bool IsSelectedProjectFile => !string.IsNullOrEmpty( SelectedProjectFile );
 
 	public ObservableCollection<TargetFileInformationItem> TargetFiles { get; init; }
 
 	// Progress関連処理
 	[ObservableProperty]
-	bool isProgressBarVisible;
+	public partial bool IsProgressBarVisible { get; set; }
 
 	[ObservableProperty]
-	bool isIndeterminate;
+	public partial bool IsIndeterminate { get; set; }
 
 	[ObservableProperty]
-	int progressMin;
+	public partial int ProgressMin { get; set; }
 
 	[ObservableProperty]
-	int progressMax;
+	public partial int ProgressMax { get; set; }
 
 	[ObservableProperty]
-	int progressValue;
+	public partial int ProgressValue { get; set; }
 
 	[ObservableProperty]
-	string? progressMessage;
+	public partial string? ProgressMessage { get; set; }
 
 	[ObservableProperty]
-	bool isCheckedNeedCopy;
+	public partial bool IsCheckedNeedCopy { get; set; }
 
 	partial void OnIsCheckedNeedCopyChanged( bool value )
 	{
@@ -50,7 +50,7 @@ public abstract partial class MainWorkBaseViewModel : ObservableObject
 	}
 
 	[ObservableProperty]
-	bool isReadyCopy;
+	public partial bool IsReadyCopy { get; set; }
 
 	[RelayCommand]
 	void AddProjectFile()
@@ -107,7 +107,7 @@ public abstract partial class MainWorkBaseViewModel : ObservableObject
 		TargetFiles = new();
 		if( App.ProjectSettingManager.ProjectName != null )
 		{
-			ProjectFiles = [.. App.ProjectSettingManager.CurrentSetting.ProjectFiles];
+			ProjectFiles = new ObservableCollection<string>( App.ProjectSettingManager.CurrentSetting.ProjectFiles );
 			IsCheckedNeedCopy = App.ProjectSettingManager.CurrentSetting.IsNeedCopy;
 		}
 		else

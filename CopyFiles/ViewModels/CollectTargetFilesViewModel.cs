@@ -16,7 +16,7 @@ public partial class CollectTargetFilesViewModel : MainWorkBaseViewModel
 	public ObservableCollection<ReferFolderItem> ReferFolders { get; init; }
 	[ObservableProperty]
 	[NotifyPropertyChangedFor( nameof( IsSelectedReferFolder ) )]
-	ReferFolderItem? selectedReferFolder;
+	public partial ReferFolderItem? SelectedReferFolder { get; set; }
 
 	[RelayCommand]
 	void AddReferFolder()
@@ -144,8 +144,6 @@ public partial class CollectTargetFilesViewModel : MainWorkBaseViewModel
 			m_cts = null;
 		}
 	}
-	[ObservableProperty]
-	bool isReadyCopy;
 
 	private void CopyAction( TargetFileInformationItem item, IProgress<int> progress, CancellationToken token )
 	{
@@ -192,11 +190,11 @@ public partial class CollectTargetFilesViewModel : MainWorkBaseViewModel
 	{
 		if( App.ProjectSettingManager?.ProjectName != null )
 		{
-			ReferFolders = [.. App.ProjectSettingManager.CurrentSetting.CopySettings.Select( x => new ReferFolderItem( x ) )];
+			ReferFolders = new ObservableCollection<ReferFolderItem>( App.ProjectSettingManager.CurrentSetting.CopySettings.Select( x => new ReferFolderItem( x ) ) );
 		}
 		else
 		{
-			ReferFolders = new();
+			ReferFolders = new ObservableCollection<ReferFolderItem>();
 		}
 	}
 }

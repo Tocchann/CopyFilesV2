@@ -8,10 +8,10 @@ public partial class AddSolutionViewModel : ObservableValidator
 {
 	[ObservableProperty]
 	[NotifyCanExecuteChangedFor( nameof( OKCommand ) )]
-	string? solutionName;
+	public partial string? SolutionName { get; set; }
 
 	[ObservableProperty]
-	bool? dialogResult;
+	public partial bool? DialogResult { get; set; }
 
 	[RelayCommand( CanExecute = nameof( CanExecuteOnOK ) )]
 	void OnOK()
