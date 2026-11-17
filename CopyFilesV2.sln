@@ -1,14 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.6.11822.322 stable
+VisualStudioVersion = 18.6.11822.322
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CopyFiles.Core", "CopyFiles.Core\CopyFiles.Core.csproj", "{CF8E1934-5F18-4C2A-9388-386EC052876E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目", "ソリューション項目", "{CA805AD5-0AD1-40D3-B88A-61EE4E943A9D}"
 	ProjectSection(SolutionItems) = preProject
 		CopyFilesV2.md = CopyFilesV2.md
-		IKIPInstaller64.ism = IKIPInstaller64.ism
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PeFileAccessor", "PeFileAccessor\PeFileAccessor.csproj", "{2CD66525-DA3B-4416-9E7E-2B783DBFD245}"
